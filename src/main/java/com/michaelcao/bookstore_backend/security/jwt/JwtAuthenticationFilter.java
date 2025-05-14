@@ -30,66 +30,64 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain)
-            throws ServletException, IOException {
-
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userEmail;
-
-        // 1. Check for Bearer token
-        if (!StringUtils.hasText(authHeader) || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response); // Proceed without setting auth if no token
-            return;
-        }
-
-        // 2. Extract token
-        jwt = authHeader.substring(7);
-
-        // 3. Extract username (email)
-        try { // Add try-catch around extraction as it might fail
-            userEmail = jwtUtil.extractUsername(jwt);
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
+        
+        try {
+            // Extract JWT from the Authorization header
+            String jwt = extractJwtFromRequest(request);
+            
+            // If no token or invalid format, continue with the filter chain
+            if (jwt == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            
+            // Extract username from JWT
+            String username = jwtUtil.extractUsername(jwt);
+            
+            // Validate username and check if there's no authentication already in context
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // Load user details
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                
+                // Validate token
+                if (jwtUtil.isTokenValid(jwt, userDetails)) {
+                    // Create authentication token
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null, // No credentials needed for JWT auth
+                            userDetails.getAuthorities()
+                    );
+                    
+                    // Set details
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    
+                    // Update security context
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    log.debug("Successfully authenticated user '{}' via JWT", username);
+                } else {
+                    log.debug("Invalid JWT token for user '{}'", username);
+                }
+            }
         } catch (Exception e) {
-            log.warn("Could not extract username from JWT: {}", e.getMessage());
-            filterChain.doFilter(request, response); // Proceed, let other filters handle potential 401/403
-            return;
+            log.error("Could not authenticate user with JWT token", e);
+            // Don't throw exception, just continue with filter chain
         }
-
-
-        // 4. Check if username exists and no authentication is already in context
-        if (StringUtils.hasText(userEmail) && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-
-            // 5. Validate token against user details
-            if (jwtUtil.isTokenValid(jwt, userDetails)) {
-                // 6. Create authentication token
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null, // No credentials needed for JWT auth
-                        userDetails.getAuthorities()
-                );
-                // 7. Set details
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
-                // 8. Update SecurityContextHolder *** IMPORTANT ***
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-                log.debug("Successfully authenticated user '{}' via JWT.", userEmail);
-            } else {
-                log.warn("JWT token validation failed for user '{}'. Token might be invalid or expired.", userEmail);
-                // Do not set authentication if token is invalid
-            }
-        } else {
-            if (!StringUtils.hasText(userEmail)) {
-                log.debug("Could not extract username from JWT (already logged)."); // Should have been caught earlier, but good failsafe log
-            }
-            // Optional: Log if auth already exists (can happen with other auth mechanisms or repeated filter calls)
-            // if (SecurityContextHolder.getContext().getAuthentication() != null) {
-            //     log.trace("SecurityContext already holds Authentication for user '{}'.", SecurityContextHolder.getContext().getAuthentication().getName());
-            // }
-        }
-
-        // 9. Proceed with the filter chain
+        
+        // Continue filter chain
         filterChain.doFilter(request, response);
+    }
+    
+    /**
+     * Extract JWT from request's Authorization header
+     * @param request The HTTP request
+     * @return JWT token or null if not found or not in correct format
+     */
+    private String extractJwtFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 }

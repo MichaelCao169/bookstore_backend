@@ -6,6 +6,8 @@ import com.michaelcao.bookstore_backend.dto.order.UpdateOrderStatusRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.UUID;
+
 public interface OrderService {
 
     /**
@@ -35,7 +37,18 @@ public interface OrderService {
      * @return OrderDTO chi tiết.
      * @throws com.michaelcao.bookstore_backend.exception.ResourceNotFoundException Nếu không tìm thấy đơn hàng hoặc đơn hàng không thuộc về người dùng.
      */
-    OrderDTO getOrderDetails(Long userId, Long orderId);
+    OrderDTO getOrderDetails(Long userId, UUID orderId);
+
+    /**
+     * Hủy đơn hàng bởi khách hàng.
+     * Chỉ cho phép hủy đơn hàng ở trạng thái PENDING hoặc PENDING_PAYMENT.
+     * @param userId ID của người dùng thực hiện hủy đơn.
+     * @param orderId ID của đơn hàng cần hủy.
+     * @return OrderDTO của đơn hàng đã hủy.
+     * @throws com.michaelcao.bookstore_backend.exception.ResourceNotFoundException Nếu đơn hàng không tồn tại hoặc không thuộc về user.
+     * @throws com.michaelcao.bookstore_backend.exception.OperationNotAllowedException Nếu đơn hàng không ở trạng thái cho phép hủy.
+     */
+    OrderDTO cancelOrder(Long userId, UUID orderId);
 
     // --- Admin Methods ---
 
@@ -52,7 +65,7 @@ public interface OrderService {
      * @return OrderDTO chi tiết.
      * @throws com.michaelcao.bookstore_backend.exception.ResourceNotFoundException Nếu không tìm thấy đơn hàng.
      */
-    OrderDTO getOrderByIdForAdmin(Long orderId); // Bỏ comment hoặc thêm mới
+    OrderDTO getOrderByIdForAdmin(UUID orderId); // Bỏ comment hoặc thêm mới
 
     /**
      * Cập nhật trạng thái đơn hàng (dành cho Admin).
@@ -62,6 +75,6 @@ public interface OrderService {
      * @throws com.michaelcao.bookstore_backend.exception.ResourceNotFoundException Nếu không tìm thấy đơn hàng.
      * @throws IllegalArgumentException Nếu trạng thái không hợp lệ hoặc chuyển đổi trạng thái không hợp lệ.
      */
-    OrderDTO updateOrderStatus(Long orderId, UpdateOrderStatusRequest request); // Sửa tham số thành DTO
+    OrderDTO updateOrderStatus(UUID orderId, UpdateOrderStatusRequest request); // Sửa tham số thành DTO
 
 }

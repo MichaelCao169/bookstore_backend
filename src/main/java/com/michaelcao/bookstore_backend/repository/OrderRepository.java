@@ -10,12 +10,19 @@ import org.springframework.data.jpa.repository.Query; // Import Query
 import org.springframework.data.repository.query.Param; // Import Param
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.Optional; // Import Optional
+import java.util.UUID;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order, Long> { // Entity: Order, ID: Long
+public interface OrderRepository extends JpaRepository<Order, UUID> { // Entity: Order, ID: UUID
 
-
+    /**
+     * Calculate the total revenue from all orders
+     * @return BigDecimal total revenue
+     */
+    @Query("SELECT SUM(o.totalAmount) FROM Order o")
+    BigDecimal getTotalRevenue();
 
     /**
      * Tìm các đơn hàng của một User ID cụ thể, sắp xếp theo ngày đặt hàng giảm dần.
@@ -31,7 +38,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> { // Entity:
      * @param userId ID của User.
      * @return Optional chứa Order nếu tìm thấy và khớp user.
      */
-    Optional<Order> findByIdAndUserId(Long orderId, Long userId);
+    Optional<Order> findByIdAndUserId(UUID orderId, Long userId);
 
     /**
      * (Ví dụ JOIN FETCH)
@@ -45,7 +52,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> { // Entity:
             "LEFT JOIN FETCH o.orderItems oi " +   // Tải OrderItems
             "LEFT JOIN FETCH oi.product p " +      // Tải Product trong từng OrderItem
             "WHERE o.id = :orderId")
-    Optional<Order> findByIdWithDetails(@Param("orderId") Long orderId);
+    Optional<Order> findByIdWithDetails(@Param("orderId") UUID orderId);
 
 
     /**
@@ -86,7 +93,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> { // Entity:
             "WHERE o.user.id = :userId AND oi.product.id = :productId AND o.status = :status")
     boolean existsByUserIdAndItemsProductIdAndStatusDelivered(
             @Param("userId") Long userId,
-            @Param("productId") Long productId,
+            @Param("productId") UUID productId,
             @Param("status") OrderStatus status // Truyền vào OrderStatus.DELIVERED
     );
 

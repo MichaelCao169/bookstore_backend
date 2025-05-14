@@ -9,11 +9,12 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList; // Import ArrayList
 import java.util.List;    // Import List
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 public class OrderDTO {
-    private Long orderId; // ID của đơn hàng
+    private UUID orderId; // ID của đơn hàng
     private Long userId; // ID của người đặt hàng
     private String userName; // Tên người đặt hàng (lấy từ User)
     private String userEmail; // Email người đặt hàng (lấy từ User)

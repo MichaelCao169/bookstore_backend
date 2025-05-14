@@ -3,22 +3,37 @@ package com.michaelcao.bookstore_backend.service;
 import com.michaelcao.bookstore_backend.dto.auth.AuthResponse;
 import com.michaelcao.bookstore_backend.dto.auth.LoginRequest;
 import com.michaelcao.bookstore_backend.dto.auth.RegisterRequest;
-import org.springframework.http.ResponseEntity; // Keep using ResponseEntity for now
 
 public interface AuthService {
-
-    // Return a simple message for now, actual response later
-    ResponseEntity<String> register(RegisterRequest registerRequest);
-
-    // Will return AuthResponse wrapped in ResponseEntity later
-    ResponseEntity<?> login(LoginRequest loginRequest);
-
-    // Add method signatures for other auth features later
-     void verifyAccount(String token);
-     // void forgotPassword(String email);
-    // void resetPassword(String token, String newPassword);
-     void forgotPassword(String email);
-
-    void resetPassword(String token, String newPassword);
-    // AuthResponse refreshToken(String refreshToken);
+    
+    /**
+     * Register a new user
+     * @param request Registration details
+     * @return Authentication response with token
+     */
+    AuthResponse register(RegisterRequest request);
+    
+    /**
+     * Authenticate a user
+     * @param request Login credentials
+     * @return Authentication response with token
+     */
+    AuthResponse login(LoginRequest request);
+    
+    /**
+     * Log out the current user
+     */
+    void logout();
+    
+    /**
+     * Verify a user's email with token
+     * @param token Email verification token
+     */
+    void verifyEmail(String token);
+    
+    /**
+     * Refresh the authentication token
+     * @return New authentication response with refreshed token
+     */
+    AuthResponse refreshToken();
 }

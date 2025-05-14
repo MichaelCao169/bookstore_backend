@@ -11,6 +11,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/wishlist") // Base path cho wishlist
 @RequiredArgsConstructor
@@ -47,7 +49,7 @@ public class WishlistController {
      * productId được lấy từ path variable.
      */
     @PostMapping("/products/{productId}")
-    public ResponseEntity<Void> addProductToMyWishlist(@PathVariable Long productId) {
+    public ResponseEntity<Void> addProductToMyWishlist(@PathVariable UUID productId) {
         Long userId = getCurrentUserId();
         log.info("Request received to add product ID {} to wishlist for user ID: {}", productId, userId);
         wishlistService.addProductToWishlist(userId, productId);
@@ -61,7 +63,7 @@ public class WishlistController {
      * productId được lấy từ path variable.
      */
     @DeleteMapping("/products/{productId}")
-    public ResponseEntity<Void> removeProductFromMyWishlist(@PathVariable Long productId) {
+    public ResponseEntity<Void> removeProductFromMyWishlist(@PathVariable UUID productId) {
         Long userId = getCurrentUserId();
         log.info("Request received to remove product ID {} from wishlist for user ID: {}", productId, userId);
         wishlistService.removeProductFromWishlist(userId, productId);

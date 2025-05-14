@@ -5,6 +5,8 @@ import com.michaelcao.bookstore_backend.dto.review.ReviewDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.UUID;
+
 public interface ReviewService {
 
     /**
@@ -18,7 +20,7 @@ public interface ReviewService {
      * @throws com.michaelcao.bookstore_backend.exception.OperationNotAllowedException Nếu người dùng chưa mua sản phẩm hoặc đã đánh giá sản phẩm này rồi.
      * @throws com.michaelcao.bookstore_backend.exception.DuplicateResourceException Nếu người dùng đã đánh giá sản phẩm này.
      */
-    ReviewDTO addReview(Long userId, Long productId, CreateReviewRequest request);
+    ReviewDTO addReview(Long userId, UUID productId, CreateReviewRequest request);
 
     /**
      * Lấy danh sách các đánh giá cho một sản phẩm cụ thể (có phân trang).
@@ -27,7 +29,7 @@ public interface ReviewService {
      * @return Page chứa danh sách ReviewDTO.
      * @throws com.michaelcao.bookstore_backend.exception.ResourceNotFoundException Nếu productId không tồn tại.
      */
-    Page<ReviewDTO> getReviewsByProductId(Long productId, Pageable pageable);
+    Page<ReviewDTO> getReviewsByProductId(UUID productId, Pageable pageable);
 
     /**
      * (Tùy chọn) Xóa một đánh giá (có thể cho Admin hoặc chính người dùng xóa).

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 // DTO này có thể hữu ích khi hiển thị danh sách sản phẩm trên trang chính
 // Chỉ chứa các thông tin cần thiết để hiển thị card sản phẩm
@@ -12,7 +13,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor // Thêm AllArgsConstructor để dễ tạo trong Service (nếu dùng projection)
 public class ProductSummaryDTO {
-    private Long id;
+    private UUID id;
     private String title;
     private String author;
     private BigDecimal price;

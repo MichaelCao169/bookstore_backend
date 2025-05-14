@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class UpdateProductRequest {
@@ -39,4 +40,6 @@ public class UpdateProductRequest {
     @NotNull(message = "Category ID cannot be null")
     @Min(value = 1)
     private Long categoryId;
+    
+    private List<Long> categoryIds;
 }

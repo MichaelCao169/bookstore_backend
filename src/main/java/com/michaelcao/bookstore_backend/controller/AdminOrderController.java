@@ -4,7 +4,6 @@ import com.michaelcao.bookstore_backend.dto.order.OrderDTO;
 import com.michaelcao.bookstore_backend.dto.order.UpdateOrderStatusRequest;
 import com.michaelcao.bookstore_backend.service.OrderService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,14 +12,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/admin/orders") // Base path cho API quản lý đơn hàng của Admin
-@RequiredArgsConstructor
 @Slf4j
 @PreAuthorize("hasRole('ADMIN')") // Yêu cầu quyền ADMIN cho tất cả các endpoint trong controller này
 public class AdminOrderController {
 
     private final OrderService orderService;
+    
+    public AdminOrderController(OrderService orderService) {
+        this.orderService = orderService;
+    }
 
     /**
      * Endpoint cho Admin lấy danh sách tất cả đơn hàng (phân trang).
@@ -37,7 +41,7 @@ public class AdminOrderController {
      * Endpoint cho Admin lấy chi tiết một đơn hàng bất kỳ.
      */
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long orderId) {
+    public ResponseEntity<OrderDTO> getOrderById(@PathVariable UUID orderId) {
         log.info("Admin request received to get details for order ID: {}", orderId);
         OrderDTO orderDetails = orderService.getOrderByIdForAdmin(orderId);
         return ResponseEntity.ok(orderDetails);
@@ -48,7 +52,7 @@ public class AdminOrderController {
      */
     @PutMapping("/{orderId}/status")
     public ResponseEntity<OrderDTO> updateOrderStatus(
-            @PathVariable Long orderId,
+            @PathVariable UUID orderId,
             @Valid @RequestBody UpdateOrderStatusRequest request) {
         log.info("Admin request received to update status for order ID: {} to {}", orderId, request.getStatus());
         OrderDTO updatedOrder = orderService.updateOrderStatus(orderId, request);

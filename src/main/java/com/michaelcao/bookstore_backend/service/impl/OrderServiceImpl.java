@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import java.util.Collections; // Import Collections
 import java.util.List;        // Import List
 import java.util.Map;         // Import Map
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -216,13 +217,13 @@ public class OrderServiceImpl implements OrderService {
         // 2. Nếu có orders trên trang này, thực hiện Query 2
         if (!ordersOnPage.isEmpty()) {
             // Lấy danh sách các Order ID
-            List<Long> orderIds = ordersOnPage.stream().map(Order::getId).collect(Collectors.toList());
+            List<UUID> orderIds = ordersOnPage.stream().map(Order::getId).collect(Collectors.toList());
 
             // Query 2: Lấy tất cả OrderItems và Products liên quan cho các Order ID đó
             List<OrderItem> allItemsForPage = orderItemRepository.findByOrderIdInWithProduct(orderIds);
 
             // 3. Gom nhóm các OrderItem theo Order ID để dễ dàng gắn vào Order
-            Map<Long, List<OrderItem>> itemsByOrderIdMap = allItemsForPage.stream()
+            Map<UUID, List<OrderItem>> itemsByOrderIdMap = allItemsForPage.stream()
                     .collect(Collectors.groupingBy(item -> item.getOrder().getId()));
 
             // 4. Gắn các OrderItem vào đối tượng Order tương ứng
@@ -246,7 +247,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public OrderDTO getOrderDetails(Long userId, Long orderId) {
+    public OrderDTO getOrderDetails(Long userId, UUID orderId) {
         // Giữ nguyên implementation này vì findByIdWithDetails đã tối ưu
         log.debug("Fetching order details for order ID: {} and user ID: {}", orderId, userId);
         Order order = orderRepository.findByIdWithDetails(orderId)
@@ -259,6 +260,50 @@ public class OrderServiceImpl implements OrderService {
         return mapToOrderDTO(order);
     }
 
+    /**
+     * Hủy đơn hàng bởi khách hàng.
+     * Chỉ cho phép hủy đơn hàng ở trạng thái PENDING hoặc PENDING_PAYMENT.
+     */
+    @Override
+    @Transactional
+    public OrderDTO cancelOrder(Long userId, UUID orderId) {
+        // 1. Tìm đơn hàng cụ thể của user (đảm bảo order thuộc về user này)
+        Order order = orderRepository.findByIdAndUserId(orderId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found or does not belong to you"));
+        
+        // 2. Kiểm tra xem đơn hàng có thể hủy không (chỉ PENDING/PENDING_PAYMENT)
+        if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new OperationNotAllowedException(
+                    "Cannot cancel this order. Only orders with PENDING or PENDING_PAYMENT status can be cancelled.");
+        }
+        
+        // 3. Cập nhật trạng thái đơn hàng thành CANCELLED
+        order.setStatus(OrderStatus.CANCELLED);
+        
+        // 4. Hoàn lại kho sản phẩm nếu đã trừ kho
+        // Lấy danh sách OrderItems liên quan đến Order này
+        Set<OrderItem> orderItems = order.getOrderItems();
+        if (orderItems != null && !orderItems.isEmpty()) {
+            for (OrderItem item : orderItems) {
+                Product product = productRepository.findById(item.getProduct().getId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + item.getProduct().getId()));
+                
+                // Tăng số lượng sản phẩm trong kho
+                int currentStock = product.getStockQuantity();
+                product.setStockQuantity(currentStock + item.getQuantity());
+                
+                // Lưu thay đổi vào DB
+                productRepository.save(product);
+                log.info("Restored {} units to stock for product ID: {}", item.getQuantity(), product.getId());
+            }
+        }
+        
+        // 5. Lưu thay đổi vào DB và trả về DTO
+        Order savedOrder = orderRepository.save(order);
+        log.info("Order ID: {} has been cancelled by user ID: {}", orderId, userId);
+        
+        return mapToOrderDTO(savedOrder);
+    }
 
     // --- Admin Methods ---
     @Override
@@ -272,9 +317,9 @@ public class OrderServiceImpl implements OrderService {
 
         // 2. Nếu có orders, thực hiện Query 2 để lấy Items + Products
         if (!ordersOnPage.isEmpty()) {
-            List<Long> orderIds = ordersOnPage.stream().map(Order::getId).collect(Collectors.toList());
+            List<UUID> orderIds = ordersOnPage.stream().map(Order::getId).collect(Collectors.toList());
             List<OrderItem> allItemsForPage = orderItemRepository.findByOrderIdInWithProduct(orderIds);
-            Map<Long, List<OrderItem>> itemsByOrderIdMap = allItemsForPage.stream()
+            Map<UUID, List<OrderItem>> itemsByOrderIdMap = allItemsForPage.stream()
                     .collect(Collectors.groupingBy(item -> item.getOrder().getId()));
 
             // 3. Gắn items vào orders
@@ -289,7 +334,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public OrderDTO getOrderByIdForAdmin(Long orderId) {
+    public OrderDTO getOrderByIdForAdmin(UUID orderId) {
         // Giữ nguyên implementation này vì findByIdWithDetails đã tối ưu
         log.debug("Admin request: Fetching order details for order ID: {}", orderId);
         Order order = orderRepository.findByIdWithDetails(orderId)
@@ -302,7 +347,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderDTO updateOrderStatus(Long orderId, UpdateOrderStatusRequest request) {
+    public OrderDTO updateOrderStatus(UUID orderId, UpdateOrderStatusRequest request) {
         log.info("Admin request: Updating status for order ID: {} to {}", orderId, request.getStatus());
         Order order = orderRepository.findById(orderId) // Chỉ cần tìm order theo ID
                 .orElseThrow(() -> {
@@ -335,9 +380,6 @@ public class OrderServiceImpl implements OrderService {
         // Cần đảm bảo `mapToOrderDTO` xử lý null an toàn.
         // return mapToOrderDTO(updatedOrder);
     }
-
-
-
 
     // Optional: Helper method để kiểm tra logic chuyển đổi trạng thái
     private boolean isValidStatusTransition(OrderStatus current, OrderStatus next) {

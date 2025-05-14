@@ -1,7 +1,9 @@
 package com.michaelcao.bookstore_backend.controller;
 
 import com.michaelcao.bookstore_backend.dto.user.ChangePasswordRequest;
+import com.michaelcao.bookstore_backend.dto.user.UpdateProfileRequest;
 import com.michaelcao.bookstore_backend.dto.user.UserProfileDTO;
+import com.michaelcao.bookstore_backend.dto.user.UpdateAvatarRequest;
 import com.michaelcao.bookstore_backend.entity.User; // Import User
 import com.michaelcao.bookstore_backend.service.UserService;
 import jakarta.validation.Valid;
@@ -62,9 +64,19 @@ public class UserController {
     }
 
     /**
-     * (Optional) Endpoint để cập nhật thông tin profile (ví dụ: tên).
+     * Endpoint để cập nhật ảnh đại diện của người dùng.
      */
-    /*
+    @PutMapping("/avatar")
+    public ResponseEntity<UserProfileDTO> updateUserAvatar(@Valid @RequestBody UpdateAvatarRequest request) {
+        Long userId = getCurrentUserId();
+        log.info("Request received to update avatar for user ID: {}", userId);
+        UserProfileDTO updatedProfile = userService.updateAvatar(userId, request);
+        return ResponseEntity.ok(updatedProfile);
+    }
+
+    /**
+     * Endpoint để cập nhật thông tin profile (ví dụ: tên).
+     */
     @PutMapping
     public ResponseEntity<UserProfileDTO> updateCurrentUserProfile(@Valid @RequestBody UpdateProfileRequest request) {
         Long userId = getCurrentUserId();
@@ -72,6 +84,5 @@ public class UserController {
         UserProfileDTO updatedProfile = userService.updateProfile(userId, request);
         return ResponseEntity.ok(updatedProfile);
     }
-    */
 
 }

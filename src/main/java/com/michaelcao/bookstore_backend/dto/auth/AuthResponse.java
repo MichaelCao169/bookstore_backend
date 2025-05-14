@@ -18,5 +18,14 @@ public class AuthResponse {
     private String tokenType = "Bearer";
     private Long userId;
     private String email;
+    private String name;
+    private String avatarUrl;
     private List<String> roles;
+    
+    // Flag indicating if the user's email is verified
+    @Builder.Default
+    private Boolean verified = true;
+    
+    // Optional message for the client
+    private String message;
 }

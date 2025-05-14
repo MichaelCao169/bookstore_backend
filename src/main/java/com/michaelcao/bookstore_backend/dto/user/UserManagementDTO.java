@@ -14,13 +14,15 @@ public class UserManagementDTO {
     private String email;
     private boolean enabled; // Trạng thái tài khoản (đã kích hoạt/khóa)
     private Set<String> roles; // Danh sách tên các vai trò (ví dụ: ["ROLE_CUSTOMER", "ROLE_ADMIN"])
+    private String avatarUrl; // Thêm trường avatar URL để hiển thị ảnh đại diện
 
     // Constructor (tùy chọn)
-    public UserManagementDTO(Long id, String name, String email, boolean enabled, Set<String> roles) {
+    public UserManagementDTO(Long id, String name, String email, boolean enabled, Set<String> roles, String avatarUrl) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.enabled = enabled;
         this.roles = roles;
+        this.avatarUrl = avatarUrl;
     }
 }

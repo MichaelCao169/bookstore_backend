@@ -15,8 +15,8 @@ import com.michaelcao.bookstore_backend.repository.CartRepository;
 import com.michaelcao.bookstore_backend.repository.ProductRepository;
 import com.michaelcao.bookstore_backend.repository.UserRepository;
 import com.michaelcao.bookstore_backend.service.CartService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +24,6 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class CartServiceImpl implements CartService {
 
@@ -32,6 +31,17 @@ public class CartServiceImpl implements CartService {
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+
+    @Autowired
+    public CartServiceImpl(CartRepository cartRepository, 
+                         CartItemRepository cartItemRepository,
+                         ProductRepository productRepository,
+                         UserRepository userRepository) {
+        this.cartRepository = cartRepository;
+        this.cartItemRepository = cartItemRepository;
+        this.productRepository = productRepository;
+        this.userRepository = userRepository;
+    }
 
     // --- Helper Method: Lấy hoặc tạo Cart cho User ---
     private Cart getOrCreateCart(Long userId) {

@@ -17,6 +17,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/orders") // Base path cho các API liên quan đến đơn hàng của người dùng
 @RequiredArgsConstructor
@@ -68,11 +70,23 @@ public class OrderController {
      * Endpoint để lấy chi tiết một đơn hàng cụ thể của người dùng hiện tại.
      */
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderDTO> getMyOrderDetails(@PathVariable Long orderId) {
+    public ResponseEntity<OrderDTO> getMyOrderDetails(@PathVariable UUID orderId) {
         Long userId = getCurrentUserId();
         log.info("Request received to get details for order ID: {} for user ID: {}", orderId, userId);
         OrderDTO orderDetails = orderService.getOrderDetails(userId, orderId);
         return ResponseEntity.ok(orderDetails);
+    }
+
+    /**
+     * Endpoint để khách hàng hủy đơn hàng của mình.
+     * Chỉ cho phép hủy đơn hàng ở trạng thái PENDING hoặc PENDING_PAYMENT.
+     */
+    @PutMapping("/{orderId}/cancel")
+    public ResponseEntity<OrderDTO> cancelOrder(@PathVariable UUID orderId) {
+        Long userId = getCurrentUserId();
+        log.info("Request received to cancel order ID: {} for user ID: {}", orderId, userId);
+        OrderDTO cancelledOrder = orderService.cancelOrder(userId, orderId);
+        return ResponseEntity.ok(cancelledOrder);
     }
 
     // --- Các API cho Admin sẽ nằm trong AdminOrderController hoặc AdminController ---

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.Set; // Import Set
+import java.util.UUID;
 
 @Repository
 public interface CartItemRepository extends JpaRepository<CartItem, Long> { // Entity: CartItem, ID: Long
@@ -30,7 +31,7 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> { // E
      * @param productId ID của Product.
      * @return Optional chứa CartItem nếu tìm thấy.
      */
-    Optional<CartItem> findByCartIdAndProductId(Long cartId, Long productId);
+    Optional<CartItem> findByCartIdAndProductId(Long cartId, UUID productId);
 
     /**
      * Tìm tất cả các CartItem thuộc về một Cart.

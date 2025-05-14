@@ -9,9 +9,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface OrderItemRepository extends JpaRepository<OrderItem, Long> { // Entity: OrderItem, ID: Long
+public interface OrderItemRepository extends JpaRepository<OrderItem, UUID> { // Entity: OrderItem, ID: UUID
 
     /**
      * Tìm tất cả OrderItem thuộc về một Order cụ thể.
@@ -27,7 +28,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> { //
      * @param orderId ID của Order.
      * @return List các OrderItem.
      */
-    List<OrderItem> findByOrderId(Long orderId);
+    List<OrderItem> findByOrderId(UUID orderId);
 
     /**
      * Tìm một OrderItem cụ thể trong một Order dựa vào Product.
@@ -40,7 +41,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> { //
 
     // Có thể thêm các query khác, ví dụ: đếm số lượng sản phẩm đã bán...
     // @Query("SELECT SUM(oi.quantity) FROM OrderItem oi WHERE oi.product.id = :productId")
-    // Integer countTotalSoldByProductId(@Param("productId") Long productId);
+    // Integer countTotalSoldByProductId(@Param("productId") UUID productId);
     /**
      * Tìm tất cả OrderItem thuộc về một danh sách các Order ID,
      * đồng thời tải luôn thông tin Product liên quan.
@@ -48,5 +49,5 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> { //
      * @return List các OrderItem với Product đã được tải.
      */
     @Query("SELECT oi FROM OrderItem oi JOIN FETCH oi.product p WHERE oi.order.id IN :orderIds")
-    List<OrderItem> findByOrderIdInWithProduct(@Param("orderIds") List<Long> orderIds);
+    List<OrderItem> findByOrderIdInWithProduct(@Param("orderIds") List<UUID> orderIds);
 }

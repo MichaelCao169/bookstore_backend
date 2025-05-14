@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -18,7 +19,7 @@ public class CartItemDTO {
     // private ProductSummaryDTO product;
 
     // Cách 2: Liệt kê các trường sản phẩm cần thiết trực tiếp
-    private Long productId;
+    private UUID productId;
     private String productTitle;
     private String productAuthor;
     private BigDecimal productPrice; // Giá của 1 sản phẩm
@@ -29,7 +30,7 @@ public class CartItemDTO {
     private BigDecimal subtotal; // Giá tiền cho món hàng này (price * quantity)
 
     // Constructor (tùy chọn, hữu ích khi mapping)
-    public CartItemDTO(Long cartItemId, Integer quantity, Long productId, String productTitle, String productAuthor, BigDecimal productPrice, String productImageUrl, Integer productStockQuantity) {
+    public CartItemDTO(Long cartItemId, Integer quantity, UUID productId, String productTitle, String productAuthor, BigDecimal productPrice, String productImageUrl, Integer productStockQuantity) {
         this.cartItemId = cartItemId;
         this.quantity = quantity;
         this.productId = productId;

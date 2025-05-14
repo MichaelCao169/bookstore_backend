@@ -4,12 +4,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 public class OrderItemDTO {
-    private Long orderItemId; // ID của OrderItem
-    private Long productId;
+    private UUID orderItemId; // ID của OrderItem
+    private UUID productId;
     private String productTitle;
     private String productAuthor; // Thêm author cho dễ nhìn
     private String productImageUrl; // Thêm ảnh
@@ -18,7 +19,7 @@ public class OrderItemDTO {
     private BigDecimal subtotal; // Tổng tiền cho item này (quantity * priceAtPurchase)
 
     // Constructor (tùy chọn)
-    public OrderItemDTO(Long orderItemId, Long productId, String productTitle, String productAuthor, String productImageUrl, Integer quantity, BigDecimal priceAtPurchase) {
+    public OrderItemDTO(UUID orderItemId, UUID productId, String productTitle, String productAuthor, String productImageUrl, Integer quantity, BigDecimal priceAtPurchase) {
         this.orderItemId = orderItemId;
         this.productId = productId;
         this.productTitle = productTitle;

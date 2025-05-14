@@ -6,6 +6,8 @@ import com.michaelcao.bookstore_backend.dto.product.UpdateProductRequest;
 import org.springframework.data.domain.Page; // Import Page
 import org.springframework.data.domain.Pageable; // Import Pageable
 import java.math.BigDecimal;
+import java.util.UUID;
+
 public interface ProductService {
 
     /**
@@ -23,7 +25,7 @@ public interface ProductService {
      * @return ProductDTO của sản phẩm.
      * @throws com.michaelcao.bookstore_backend.exception.ResourceNotFoundException Nếu không tìm thấy sản phẩm.
      */
-    ProductDTO getProductById(Long id);
+    ProductDTO getProductById(UUID id);
 
     /**
      * Lấy danh sách tất cả sản phẩm (có phân trang).
@@ -67,14 +69,14 @@ public interface ProductService {
      * @throws com.michaelcao.bookstore_backend.exception.ResourceNotFoundException Nếu productId hoặc categoryId không tồn tại.
      * @throws com.michaelcao.bookstore_backend.exception.DuplicateResourceException Nếu ISBN mới trùng với ISBN khác (ngoại trừ chính nó).
      */
-    ProductDTO updateProduct(Long id, UpdateProductRequest request);
+    ProductDTO updateProduct(UUID id, UpdateProductRequest request);
 
     /**
      * Xóa một sản phẩm.
      * @param id ID của sản phẩm cần xóa.
      * @throws com.michaelcao.bookstore_backend.exception.ResourceNotFoundException Nếu không tìm thấy sản phẩm.
      */
-    void deleteProduct(Long id);
+    void deleteProduct(UUID id);
 
     // Thêm các phương thức khác nếu cần (search, updateStock,...)
     // Page<ProductDTO> searchProducts(String keyword, Pageable pageable);
@@ -85,4 +87,13 @@ public interface ProductService {
      * @return Page chứa danh sách ProductDTO tìm thấy.
      */
     Page<ProductDTO> searchProducts(String keyword, Pageable pageable);
+
+    /**
+     * Kiểm tra xem người dùng đã mua sản phẩm và nhận hàng thành công chưa
+     * 
+     * @param userId ID của người dùng
+     * @param productId ID của sản phẩm
+     * @return true nếu người dùng đã mua và nhận hàng sản phẩm này, false nếu chưa
+     */
+    boolean hasUserPurchasedProduct(Long userId, UUID productId);
 }

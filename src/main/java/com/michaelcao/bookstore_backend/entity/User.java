@@ -37,6 +37,9 @@ public class User implements UserDetails {
     @Column(name = "is_enabled", nullable = false)
     private boolean enabled = false; // Default: needs verification
 
+    @Column(name = "avatar_url")
+    private String avatarUrl = "/default-avatar.png"; // Mặc định có ảnh đại diện
+
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -62,24 +65,43 @@ public class User implements UserDetails {
     }
 
     @Override
-    public String getUsername() { return email; }
+    public String getUsername() {
+        return email; // Email is used as the username
+    }
 
     @Override
-    public String getPassword() { return password; }
+    public String getPassword() {
+        return password;
+    }
 
     @Override
-    public boolean isAccountNonExpired() { return true; }
+    public boolean isAccountNonExpired() {
+        return true; // Account never expires
+    }
 
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() {
+        return true; // Account is never locked
+    }
 
     @Override
-    public boolean isCredentialsNonExpired() { return true; }
+    public boolean isCredentialsNonExpired() {
+        return true; // Credentials never expire
+    }
 
     @Override
-    public boolean isEnabled() { return enabled; }
+    public boolean isEnabled() {
+        return enabled;
+    }
 
-    public void addRole(Role role) { this.roles.add(role); }
+    // --- Utility methods for Role management ---
+    public void addRole(Role role) {
+        this.roles.add(role);
+    }
+
+    public void removeRole(Role role) {
+        this.roles.remove(role);
+    }
 
     // Helper methods (tùy chọn)
     public void addToWishlist(Product product) {

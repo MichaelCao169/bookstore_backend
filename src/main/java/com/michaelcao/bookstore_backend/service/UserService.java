@@ -2,9 +2,10 @@ package com.michaelcao.bookstore_backend.service;
 
 import com.michaelcao.bookstore_backend.dto.user.ChangePasswordRequest; // Sẽ tạo DTO này
 import com.michaelcao.bookstore_backend.dto.user.UserProfileDTO;      // Sẽ tạo DTO này
-// Optional: import UpdateProfileRequest
+import com.michaelcao.bookstore_backend.dto.user.UpdateProfileRequest; // Uncomment this
 import com.michaelcao.bookstore_backend.dto.user.UserManagementDTO; // Import DTO mới
 import com.michaelcao.bookstore_backend.dto.user.UpdateUserStatusRequest; // Import DTO mới
+import com.michaelcao.bookstore_backend.dto.user.UpdateAvatarRequest; // Import DTO mới
 import org.springframework.data.domain.Page; // Import Page
 import org.springframework.data.domain.Pageable; // Import Pageable
 public interface UserService {
@@ -27,12 +28,21 @@ public interface UserService {
     void changePassword(Long userId, ChangePasswordRequest request);
 
     /**
-     * (Optional) Cập nhật thông tin profile cơ bản (ví dụ: tên).
+     * Cập nhật ảnh đại diện cho người dùng.
+     * @param userId ID của người dùng đang đăng nhập.
+     * @param request DTO chứa URL ảnh đại diện mới.
+     * @return UserProfileDTO sau khi cập nhật.
+     * @throws com.michaelcao.bookstore_backend.exception.ResourceNotFoundException Nếu không tìm thấy user.
+     */
+    UserProfileDTO updateAvatar(Long userId, UpdateAvatarRequest request);
+
+    /**
+     * Cập nhật thông tin profile cơ bản (ví dụ: tên).
      * @param userId ID của người dùng.
      * @param request DTO chứa thông tin cập nhật.
      * @return UserProfileDTO sau khi cập nhật.
      */
-    // UserProfileDTO updateProfile(Long userId, UpdateProfileRequest request);
+    UserProfileDTO updateProfile(Long userId, UpdateProfileRequest request);
 
     // --- Admin Methods ---
 

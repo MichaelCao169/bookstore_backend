@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class CreateProductRequest {
@@ -37,5 +38,7 @@ public class CreateProductRequest {
 
     @NotNull(message = "Category ID cannot be null")
     @Min(value = 1, message = "Category ID must be positive") // ID thường bắt đầu từ 1
-    private Long categoryId; // Chỉ cần ID của category khi tạo
+    private Long categoryId; // Danh mục chính (có thể null nếu dùng categoryIds)
+    
+    private List<Long> categoryIds; // Danh sách ID của các danh mục (mới)
 }

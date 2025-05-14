@@ -18,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -46,7 +48,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     // --- Helper method: Kiểm tra xem user đã mua sản phẩm chưa ---
     // Trong ReviewServiceImpl.java
-    private boolean checkIfUserPurchasedProduct(Long userId, Long productId) {
+    private boolean checkIfUserPurchasedProduct(Long userId, UUID productId) {
         // Gọi đúng phương thức repository và truyền trạng thái DELIVERED
         boolean hasPurchased = orderRepository.existsByUserIdAndItemsProductIdAndStatusDelivered(userId, productId, OrderStatus.DELIVERED);
         log.debug("Check purchase status: User ID {} purchased and received product ID {}: {}", userId, productId, hasPurchased);
@@ -55,7 +57,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional // Cần transaction vì có ghi dữ liệu
-    public ReviewDTO addReview(Long userId, Long productId, CreateReviewRequest request) {
+    public ReviewDTO addReview(Long userId, UUID productId, CreateReviewRequest request) {
         log.info("Attempting to add review for product ID {} by user ID {}", productId, userId);
 
         // 1. Lấy thông tin User và Product
@@ -97,7 +99,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewDTO> getReviewsByProductId(Long productId, Pageable pageable) {
+    public Page<ReviewDTO> getReviewsByProductId(UUID productId, Pageable pageable) {
         log.debug("Fetching reviews for product ID {} with pagination: {}", productId, pageable);
         // Kiểm tra Product tồn tại
         if (!productRepository.existsById(productId)) {

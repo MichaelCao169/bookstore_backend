@@ -5,10 +5,12 @@ import com.michaelcao.bookstore_backend.dto.product.CreateProductRequest;
 import com.michaelcao.bookstore_backend.dto.product.ProductDTO;
 import com.michaelcao.bookstore_backend.dto.product.UpdateProductRequest;
 import com.michaelcao.bookstore_backend.entity.Category;
+import com.michaelcao.bookstore_backend.entity.OrderStatus;
 import com.michaelcao.bookstore_backend.entity.Product;
 import com.michaelcao.bookstore_backend.exception.DuplicateResourceException;
 import com.michaelcao.bookstore_backend.exception.ResourceNotFoundException;
 import com.michaelcao.bookstore_backend.repository.CategoryRepository;
+import com.michaelcao.bookstore_backend.repository.OrderRepository;
 import com.michaelcao.bookstore_backend.repository.ProductRepository;
 import com.michaelcao.bookstore_backend.repository.specification.ProductSpecification;
 import com.michaelcao.bookstore_backend.service.ProductService;
@@ -28,6 +30,9 @@ import java.util.function.Function; // Import Function
 import java.util.stream.Collectors;
 import java.util.Collections; // Import Collections
 import java.math.BigDecimal;
+import java.util.UUID;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +42,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ReviewRepository reviewRepository;
+    private final OrderRepository orderRepository;
     // --- Helper methods for mapping ---
     private ProductDTO mapToProductDTO(Product product, ReviewStats stats) {
         ProductDTO dto = new ProductDTO();
@@ -51,8 +57,8 @@ public class ProductServiceImpl implements ProductService {
         dto.setPublishedDate(product.getPublishedDate());
         dto.setCreatedAt(product.getCreatedAt());
         dto.setUpdatedAt(product.getUpdatedAt());
-        dto.setUpdatedAt(product.getUpdatedAt());
-        // Map Category sang CategoryDTO
+        
+        // Map Category chính sang CategoryDTO
         if (product.getCategory() != null) {
             dto.setCategory(new CategoryDTO(
                     product.getCategory().getId(),
@@ -60,6 +66,18 @@ public class ProductServiceImpl implements ProductService {
                     product.getCategory().getDescription()
             ));
         }
+        
+        // Map nhiều Category
+        if (product.getCategories() != null && !product.getCategories().isEmpty()) {
+            dto.setCategories(product.getCategories().stream()
+                    .map(category -> new CategoryDTO(
+                            category.getId(),
+                            category.getName(),
+                            category.getDescription()
+                    ))
+                    .collect(Collectors.toList()));
+        }
+        
         // *** SET THÔNG TIN REVIEW TỪ STATS ***
         if (stats != null) {
             // Làm tròn rating đến 1 chữ số thập phân nếu cần
@@ -97,9 +115,6 @@ public class ProductServiceImpl implements ProductService {
             throw new DuplicateResourceException("Product with ISBN '" + request.getIsbn() + "' already exists.");
         }
 
-        // Tìm category theo ID
-        Category category = findCategoryById(request.getCategoryId());
-
         Product product = new Product();
         product.setTitle(request.getTitle());
         product.setAuthor(request.getAuthor());
@@ -109,8 +124,31 @@ public class ProductServiceImpl implements ProductService {
         product.setStockQuantity(request.getStockQuantity());
         product.setImageUrl(request.getImageUrl());
         product.setPublishedDate(request.getPublishedDate());
-        product.setCategory(category);
-        // createdAt và updatedAt sẽ tự động được tạo/cập nhật bởi @CreationTimestamp/@UpdateTimestamp
+        
+        // Tìm category chính theo ID (nếu có)
+        if (request.getCategoryId() != null) {
+            Category category = findCategoryById(request.getCategoryId());
+            product.setCategory(category);
+        }
+        
+        // Xử lý nhiều categories
+        if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
+            Set<Category> categories = new HashSet<>();
+            for (Long categoryId : request.getCategoryIds()) {
+                Category category = findCategoryById(categoryId);
+                categories.add(category);
+            }
+            product.setCategories(categories);
+            
+            // Đặt danh mục đầu tiên làm danh mục chính nếu chưa có
+            if (product.getCategory() == null && !categories.isEmpty()) {
+                product.setCategory(categories.iterator().next());
+            }
+        } 
+        // Đảm bảo danh mục chính cũng nằm trong danh sách categories
+        else if (product.getCategory() != null) {
+            product.getCategories().add(product.getCategory());
+        }
 
         Product savedProduct = productRepository.save(product);
         log.info("Product created successfully with ID: {}", savedProduct.getId());
@@ -119,7 +157,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProductDTO getProductById(Long id) {
+    public ProductDTO getProductById(UUID id) {
         log.debug("Fetching product with ID: {}", id);
         // Lấy Product (nên JOIN FETCH Category nếu cần tối ưu)
         Product product = productRepository.findById(id) // Tạm thời chưa fetch category
@@ -136,11 +174,11 @@ public class ProductServiceImpl implements ProductService {
     // Phương thức chung để xử lý Page<Product> và thêm Review Stats
     private Page<ProductDTO> mapProductPageToDtoWithStats(Page<Product> productPage) {
         List<Product> productsOnPage = productPage.getContent();
-        Map<Long, ReviewStats> statsMap = Collections.emptyMap(); // Khởi tạo map rỗng
+        Map<UUID, ReviewStats> statsMap = Collections.emptyMap(); // Khởi tạo map rỗng
 
         if (!productsOnPage.isEmpty()) {
             // Lấy danh sách Product IDs
-            List<Long> productIds = productsOnPage.stream().map(Product::getId).collect(Collectors.toList());
+            List<UUID> productIds = productsOnPage.stream().map(Product::getId).collect(Collectors.toList());
 
             // Query 1 lần để lấy stats cho tất cả product IDs trên trang
             List<ReviewStats> reviewStatsList = reviewRepository.findReviewStatsByProductIdsProjection(productIds);
@@ -152,7 +190,7 @@ public class ProductServiceImpl implements ProductService {
 
         // Map Page<Product> sang Page<ProductDTO>, truyền ReviewStats tương ứng vào hàm map
         // Cần final hoặc effectively final để dùng trong lambda
-        final Map<Long, ReviewStats> finalStatsMap = statsMap;
+        final Map<UUID, ReviewStats> finalStatsMap = statsMap;
         return productPage.map(product -> mapToProductDTO(product, finalStatsMap.get(product.getId())));
     }
 
@@ -196,56 +234,67 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public ProductDTO updateProduct(Long id, UpdateProductRequest request) {
+    public ProductDTO updateProduct(UUID id, UpdateProductRequest request) {
         log.debug("Attempting to update product with ID: {}", id);
+
+        // Tìm sản phẩm hiện tại, không có sẽ ném ResourceNotFoundException
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Product update failed: Product not found with ID: {}", id);
-                    return new ResourceNotFoundException("Product", "ID", id);
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "ID", id));
 
-        // Kiểm tra ISBN trùng lặp (nếu ISBN được cung cấp và thay đổi)
-        if (StringUtils.hasText(request.getIsbn()) && !request.getIsbn().equals(product.getIsbn())) {
-            productRepository.findByIsbn(request.getIsbn()).ifPresent(existingProduct -> {
-                if (!existingProduct.getId().equals(id)) { // Nếu ISBN mới trùng với sản phẩm KHÁC
-                    log.warn("Product update failed: ISBN '{}' already exists for product ID: {}", request.getIsbn(), existingProduct.getId());
-                    throw new DuplicateResourceException("Product with ISBN '" + request.getIsbn() + "' already exists.");
-                }
-            });
-            product.setIsbn(request.getIsbn()); // Cập nhật ISBN nếu hợp lệ
-        } else if (!StringUtils.hasText(request.getIsbn())) {
-            product.setIsbn(null); // Cho phép xóa ISBN
+        // Kiểm tra ISBN trùng lặp (nếu ISBN được cung cấp và đã thay đổi)
+        if (StringUtils.hasText(request.getIsbn()) && !request.getIsbn().equals(product.getIsbn())
+                && productRepository.existsByIsbn(request.getIsbn())) {
+            log.warn("Product update failed: ISBN '{}' already exists.", request.getIsbn());
+            throw new DuplicateResourceException("Product with ISBN '" + request.getIsbn() + "' already exists.");
         }
 
-
-        // Tìm category theo ID nếu categoryId thay đổi
-        if (!request.getCategoryId().equals(product.getCategory().getId())) {
-            Category category = findCategoryById(request.getCategoryId());
-            product.setCategory(category);
-        }
-
-        // Cập nhật các trường khác
+        // Cập nhật thông tin sản phẩm
         product.setTitle(request.getTitle());
         product.setAuthor(request.getAuthor());
+        product.setIsbn(request.getIsbn());
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setStockQuantity(request.getStockQuantity());
         product.setImageUrl(request.getImageUrl());
         product.setPublishedDate(request.getPublishedDate());
-        // updatedAt sẽ tự động cập nhật
+
+        // Cập nhật category chính nếu có thay đổi
+        if (request.getCategoryId() != null) {
+            Category category = findCategoryById(request.getCategoryId());
+            product.setCategory(category);
+        }
+        
+        // Cập nhật danh sách categories
+        if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
+            // Xóa tất cả categories hiện tại
+            product.getCategories().clear();
+            
+            // Thêm categories mới
+            Set<Category> categories = new HashSet<>();
+            for (Long categoryId : request.getCategoryIds()) {
+                Category category = findCategoryById(categoryId);
+                categories.add(category);
+            }
+            product.setCategories(categories);
+            
+            // Đặt danh mục đầu tiên làm danh mục chính nếu chưa có
+            if (product.getCategory() == null && !categories.isEmpty()) {
+                product.setCategory(categories.iterator().next());
+            }
+        } 
+        // Đảm bảo danh mục chính cũng nằm trong danh sách categories
+        else if (product.getCategory() != null) {
+            product.getCategories().add(product.getCategory());
+        }
 
         Product updatedProduct = productRepository.save(product);
         log.info("Product updated successfully with ID: {}", updatedProduct.getId());
-        // Lấy stats cho sản phẩm vừa cập nhật
-        ReviewStats stats = reviewRepository.findReviewStatsByProductIdsProjection(Collections.singletonList(id))
-                .stream().findFirst().orElse(null);
-        // Map sang DTO với stats
-        return mapToProductDTO(updatedProduct, stats);
+        return mapToProductDTO(updatedProduct);
     }
 
     @Override
     @Transactional
-    public void deleteProduct(Long id) {
+    public void deleteProduct(UUID id) {
         log.debug("Attempting to delete product with ID: {}", id);
         if (!productRepository.existsById(id)) {
             log.warn("Product deletion failed: Product not found with ID: {}", id);
@@ -261,5 +310,27 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public Page<ProductDTO> searchProducts(String keyword, Pageable pageable) {
         return filterProducts(null, keyword, null, null, null, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasUserPurchasedProduct(Long userId, UUID productId) {
+        log.debug("Checking if user ID {} has purchased product ID {}", userId, productId);
+        
+        // Kiểm tra sản phẩm tồn tại
+        if (!productRepository.existsById(productId)) {
+            log.warn("Product with ID {} does not exist", productId);
+            return false;
+        }
+        
+        // Kiểm tra người dùng đã mua và nhận hàng thành công
+        boolean hasPurchased = orderRepository.existsByUserIdAndItemsProductIdAndStatusDelivered(
+            userId, 
+            productId, 
+            OrderStatus.DELIVERED
+        );
+        
+        log.debug("User ID {} has purchased product ID {}: {}", userId, productId, hasPurchased);
+        return hasPurchased;
     }
 }

@@ -2,6 +2,8 @@ package com.michaelcao.bookstore_backend.service.impl;
 
 import com.michaelcao.bookstore_backend.dto.user.ChangePasswordRequest;
 import com.michaelcao.bookstore_backend.dto.user.UserProfileDTO;
+import com.michaelcao.bookstore_backend.dto.user.UpdateAvatarRequest;
+import com.michaelcao.bookstore_backend.dto.user.UpdateProfileRequest;
 import com.michaelcao.bookstore_backend.entity.User;
 import com.michaelcao.bookstore_backend.exception.ResourceNotFoundException;
 import com.michaelcao.bookstore_backend.repository.UserRepository;
@@ -32,8 +34,8 @@ public class UserServiceImpl implements UserService {
         return new UserProfileDTO(
                 user.getId(),
                 user.getName(),
-                user.getEmail()
-                // Không bao gồm password hoặc các thông tin nhạy cảm khác
+                user.getEmail(),
+                user.getAvatarUrl()
         );
     }
     private UserManagementDTO mapToUserManagementDTO(User user) {
@@ -48,7 +50,8 @@ public class UserServiceImpl implements UserService {
                 user.getName(),
                 user.getEmail(),
                 user.isEnabled(), // Lấy trạng thái enabled
-                roleNames         // Lấy danh sách tên roles
+                roleNames,        // Lấy danh sách tên roles
+                user.getAvatarUrl() // Thêm avatarUrl
         );
     }
 
@@ -100,8 +103,7 @@ public class UserServiceImpl implements UserService {
         // log.info("Old refresh tokens invalidated for user ID: {}", userId);
     }
 
-    // --- Implement updateProfile nếu cần ---
-    /*
+    // --- Implement updateProfile ---
     @Override
     @Transactional
     public UserProfileDTO updateProfile(Long userId, UpdateProfileRequest request) {
@@ -118,7 +120,6 @@ public class UserServiceImpl implements UserService {
          log.info("Profile updated successfully for user ID: {}", userId);
          return mapToUserProfileDTO(updatedUser);
     }
-    */
 
     // --- Admin Methods ---
 
@@ -208,4 +209,21 @@ public class UserServiceImpl implements UserService {
         return mapToUserManagementDTO(updatedUser); // mapToUserManagementDTO đã lấy roles từ user
     }
    */
+
+    @Override
+    @Transactional
+    public UserProfileDTO updateAvatar(Long userId, UpdateAvatarRequest request) {
+        log.info("Attempting to update avatar for user ID: {}", userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    log.warn("User not found for avatar update with ID: {}", userId);
+                    return new ResourceNotFoundException("User", "ID", userId);
+                });
+
+        // Cập nhật avatar URL
+        user.setAvatarUrl(request.getAvatarUrl());
+        User updatedUser = userRepository.save(user);
+        log.info("Avatar updated successfully for user ID: {}", userId);
+        return mapToUserProfileDTO(updatedUser);
+    }
 }

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // Cần Transactional
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,7 +56,7 @@ public class WishlistServiceImpl implements WishlistService {
 
     @Override
     @Transactional // Cần Transaction để cập nhật User
-    public void addProductToWishlist(Long userId, Long productId) {
+    public void addProductToWishlist(Long userId, UUID productId) {
         log.info("Attempting to add product ID {} to wishlist for user ID {}", productId, userId);
         // Lấy User (cần fetch EAGER hoặc trong transaction để sửa collection)
         // findById sẽ trả về managed entity trong transaction này
@@ -85,7 +86,7 @@ public class WishlistServiceImpl implements WishlistService {
 
     @Override
     @Transactional // Cần Transaction để cập nhật User
-    public void removeProductFromWishlist(Long userId, Long productId) {
+    public void removeProductFromWishlist(Long userId, UUID productId) {
         log.info("Attempting to remove product ID {} from wishlist for user ID {}", productId, userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "ID", userId));

@@ -8,10 +8,18 @@ import org.springframework.data.jpa.repository.Query; // Import Query for custom
 import org.springframework.data.repository.query.Param; // Import Param for named parameters
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
+public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpecificationExecutor<Product> {
+
+    /**
+     * Find all products ordered by sold count in descending order
+     * @return List of products sorted by number sold
+     */
+    List<Product> findAllByOrderBySoldCountDesc();
 
     // Tìm sản phẩm theo ISBN (duy nhất)
     Optional<Product> findByIsbn(String isbn);

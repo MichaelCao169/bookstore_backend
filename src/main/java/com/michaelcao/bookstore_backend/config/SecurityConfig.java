@@ -23,15 +23,16 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
 
-    // Public endpoints
+    // Public endpoints that don't require authentication
     private static final String[] PUBLIC_MATCHERS = {
             "/api/auth/**",
-            "/verify-email/**",
-            "/reset-password/**",
-            "/api/test/**",
+            "/api/verify-email/**",
+            "/api/reset-password/**",
+            "/api/test/hello-public",
+            "/api/uploads/**",
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html"
@@ -40,31 +41,47 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> {})
-
-                .authorizeHttpRequests(authz -> authz
-                        // Public GET APIs
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
-                        .requestMatchers(PUBLIC_MATCHERS).permitAll()
-
-                        // Customer APIs
-                        .requestMatchers("/api/cart/**").hasRole("CUSTOMER")
-                        .requestMatchers("/api/orders/**").hasRole("CUSTOMER")
-                        .requestMatchers("/api/profile/**").authenticated()
-                        // Admin APIs
-                        .requestMatchers("/api/products/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/categories/**").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/orders/**").hasRole("ADMIN")
-                        .requestMatchers("/api/wishlist/**").hasRole("CUSTOMER")
-                        // Mọi request khác cần xác thực
-                        .anyRequest().authenticated()
-                )
-
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            // Disable CSRF for REST API 
+            .csrf(AbstractHttpConfigurer::disable)
+            
+            // Configure CORS
+            .cors(cors -> {})
+            
+            // Configure authorization rules
+            .authorizeHttpRequests(authz -> authz
+                // Public endpoints
+                .requestMatchers(PUBLIC_MATCHERS).permitAll()
+                
+                // Public GET endpoints for products and categories
+                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                
+                // Customer-specific endpoints
+                .requestMatchers("/api/cart/**").hasRole("CUSTOMER")
+                .requestMatchers("/api/orders/**").hasRole("CUSTOMER")
+                .requestMatchers("/api/wishlist/**").hasRole("CUSTOMER")
+                
+                // Admin-specific endpoints
+                .requestMatchers("/api/products/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                
+                // User profile endpoints require any authenticated user
+                .requestMatchers("/api/profile/**").authenticated()
+                
+                // All other requests require authentication
+                .anyRequest().authenticated()
+            )
+            
+            // Set stateless session management for REST API
+            .sessionManagement(session -> 
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            
+            // Set authentication provider
+            .authenticationProvider(authenticationProvider)
+            
+            // Add JWT filter before UsernamePasswordAuthenticationFilter
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
