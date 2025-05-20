@@ -36,4 +36,17 @@ public interface AuthService {
      * @return New authentication response with refreshed token
      */
     AuthResponse refreshToken();
+
+    /**
+     * Process a forgot password request
+     * @param email The email address of the user requesting password reset
+     */
+    void forgotPassword(String email);
+
+    /**
+     * Reset a user's password using a valid reset token
+     * @param token The password reset token
+     * @param newPassword The new password to set
+     */
+    void resetPassword(String token, String newPassword);
 }

@@ -51,19 +51,17 @@ public class CategoryController {
 
     // --- Endpoint cho Public ---
 
-    @GetMapping("/categories/{id}")
-    // @PreAuthorize("permitAll()") // Không cần thiết vì mặc định SecurityConfig đã cho phép
-    public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
-        log.debug("Public request received to get category ID: {}", id);
-        CategoryDTO category = categoryService.getCategoryById(id);
-        return ResponseEntity.ok(category);
-    }
-
     @GetMapping("/categories")
-    // @PreAuthorize("permitAll()")
     public ResponseEntity<List<CategoryDTO>> getAllCategories() {
-        log.debug("Public request received to get all categories");
+        log.info("Public request received to get all categories");
         List<CategoryDTO> categories = categoryService.getAllCategories();
         return ResponseEntity.ok(categories);
+    }
+
+    @GetMapping("/categories/{id}")
+    public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
+        log.info("Public request received to get category ID: {}", id);
+        CategoryDTO category = categoryService.getCategoryById(id);
+        return ResponseEntity.ok(category);
     }
 }

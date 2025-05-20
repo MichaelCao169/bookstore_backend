@@ -46,7 +46,16 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     boolean existsByIsbn(String isbn);
 
     // Đếm số lượng sản phẩm theo category ID (dùng để kiểm tra trước khi xóa Category)
-    long countByCategoryId(Long categoryId);
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.category.id = :categoryId")
+    long countByCategoryId(@Param("categoryId") Long categoryId);
+
+    // Tìm sản phẩm theo nhiều danh mục
+    @Query("SELECT p FROM Product p JOIN p.categories c WHERE c.id IN :categoryIds")
+    Page<Product> findByCategoryIds(@Param("categoryIds") List<Long> categoryIds, Pageable pageable);
+
+    // Tìm sản phẩm theo từ khóa trong tiêu đề hoặc tác giả
+    @Query("SELECT p FROM Product p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.author) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    Page<Product> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
     // Bạn có thể thêm nhiều phương thức truy vấn khác dựa trên nhu cầu
 }

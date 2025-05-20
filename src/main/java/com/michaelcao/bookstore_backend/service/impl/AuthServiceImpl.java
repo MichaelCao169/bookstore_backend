@@ -6,10 +6,12 @@ import com.michaelcao.bookstore_backend.dto.auth.RegisterRequest;
 import com.michaelcao.bookstore_backend.entity.Role;
 import com.michaelcao.bookstore_backend.entity.User;
 import com.michaelcao.bookstore_backend.entity.VerificationToken;
+import com.michaelcao.bookstore_backend.entity.PasswordResetToken;
 import com.michaelcao.bookstore_backend.exception.ResourceNotFoundException;
 import com.michaelcao.bookstore_backend.repository.RoleRepository;
 import com.michaelcao.bookstore_backend.repository.UserRepository;
 import com.michaelcao.bookstore_backend.repository.VerificationTokenRepository;
+import com.michaelcao.bookstore_backend.repository.PasswordResetTokenRepository;
 import com.michaelcao.bookstore_backend.security.jwt.JwtUtil;
 import com.michaelcao.bookstore_backend.service.AuthService;
 import com.michaelcao.bookstore_backend.service.EmailService;
@@ -39,6 +41,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final VerificationTokenRepository tokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
@@ -196,5 +199,59 @@ public class AuthServiceImpl implements AuthService {
                 .accessToken(token)
                 .verified(true)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(String email) {
+        log.info("Processing forgot password request for email: {}", email);
+        
+        // Find user by email
+        User user = userRepository.findByEmail(email)
+                .orElse(null); // Don't throw exception to prevent email enumeration
+        
+        if (user != null) {
+            // Delete any existing password reset tokens for this user
+            passwordResetTokenRepository.deleteByUser(user);
+            
+            // Create new password reset token
+            String token = UUID.randomUUID().toString();
+            PasswordResetToken passwordResetToken = new PasswordResetToken(token, user);
+            passwordResetTokenRepository.save(passwordResetToken);
+            
+            // Generate reset URL
+            String resetUrl = frontendUrl + "/reset-password?token=" + token;
+            
+            // Send password reset email
+            emailService.sendPasswordResetEmail(user.getEmail(), user.getName(), resetUrl);
+            log.info("Password reset email sent to: {}", email);
+        } else {
+            log.warn("Forgot password request for non-existent email: {}", email);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        log.info("Processing password reset request with token");
+        
+        // Find token in database
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Token", "value", token));
+        
+        // Check if token is expired
+        if (resetToken.isExpired()) {
+            throw new IllegalStateException("Token is expired");
+        }
+        
+        // Get user and update password
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        
+        // Delete used token
+        passwordResetTokenRepository.delete(resetToken);
+        
+        log.info("Password reset successfully for user: {}", user.getEmail());
     }
 } 

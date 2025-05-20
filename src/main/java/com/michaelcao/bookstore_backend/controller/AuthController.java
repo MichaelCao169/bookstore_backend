@@ -3,6 +3,8 @@ package com.michaelcao.bookstore_backend.controller;
 import com.michaelcao.bookstore_backend.dto.auth.AuthResponse;
 import com.michaelcao.bookstore_backend.dto.auth.LoginRequest;
 import com.michaelcao.bookstore_backend.dto.auth.RegisterRequest;
+import com.michaelcao.bookstore_backend.dto.auth.ForgotPasswordRequest;
+import com.michaelcao.bookstore_backend.dto.auth.ResetPasswordRequest;
 import com.michaelcao.bookstore_backend.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -50,5 +52,19 @@ public class AuthController {
     public ResponseEntity<AuthResponse> refreshToken() {
         log.info("Processing token refresh request");
         return ResponseEntity.ok(authService.refreshToken());
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        log.info("Processing forgot password request for email: {}", request.getEmail());
+        authService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok("If an account exists with this email, you will receive a password reset link.");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        log.info("Processing password reset request");
+        authService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok("Password has been reset successfully");
     }
 }
