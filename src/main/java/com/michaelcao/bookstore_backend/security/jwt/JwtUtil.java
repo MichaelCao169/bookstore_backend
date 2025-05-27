@@ -102,7 +102,17 @@ public class JwtUtil {
         } catch (Exception e) {
             log.error("Failed to check token expiration", e);
             return true;
-        }
+        }    }
+
+    // Extract user ID from token
+    public Long extractUserId(String token) {
+        return extractClaim(token, claims -> {
+            Object userId = claims.get("userId");
+            if (userId instanceof Number) {
+                return ((Number) userId).longValue();
+            }
+            return null;
+        });
     }
 
     // Validate token
@@ -130,4 +140,4 @@ public class JwtUtil {
             return false;
         }
     }
-} 
+}

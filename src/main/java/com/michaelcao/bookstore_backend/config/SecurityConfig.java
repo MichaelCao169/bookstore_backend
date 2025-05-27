@@ -24,15 +24,14 @@ import org.springframework.web.cors.CorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final AuthenticationProvider authenticationProvider;
-
-    // Public endpoints that don't require authentication
+    private final AuthenticationProvider authenticationProvider;    // Public endpoints that don't require authentication
     private static final String[] PUBLIC_MATCHERS = {
             "/api/auth/**",
             "/api/verify-email/**",
             "/api/reset-password/**",
             "/api/test/hello-public",
             "/api/uploads/**",
+            "/ws/**", // WebSocket endpoint
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html"
@@ -60,10 +59,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/cart/**").hasRole("CUSTOMER")
                 .requestMatchers("/api/orders/**").hasRole("CUSTOMER")
                 .requestMatchers("/api/wishlist/**").hasRole("CUSTOMER")
-                
-                // Admin-specific endpoints
+                  // Admin-specific endpoints
                 .requestMatchers("/api/products/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                
+                // Chat endpoints - both admin and customer can access
+                .requestMatchers("/api/chat/**").authenticated()
                 
                 // User profile endpoints require any authenticated user
                 .requestMatchers("/api/profile/**").authenticated()
