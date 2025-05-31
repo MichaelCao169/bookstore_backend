@@ -22,9 +22,9 @@ public class ConversationResponse {
     private LocalDateTime lastMessageTimestamp;
     private Integer unreadCountCustomer;
     private Integer unreadCountAdmin;
-    private String status;
-    private LocalDateTime createdAt;
+    private String status;    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean isCustomerOnline;
+    private Boolean isAdminOnline;
     private List<MessageResponse> recentMessages;
 }

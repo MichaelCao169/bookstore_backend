@@ -9,6 +9,7 @@ import com.michaelcao.bookstore_backend.entity.User;
 import com.michaelcao.bookstore_backend.repository.ConversationRepository;
 import com.michaelcao.bookstore_backend.repository.MessageRepository;
 import com.michaelcao.bookstore_backend.repository.UserRepository;
+import com.michaelcao.bookstore_backend.service.OnlineUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,11 +26,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional
 public class ChatService {
-    
+
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final OnlineUserService onlineUserService;
     
     // Customer sends message to admin
     public MessageResponse sendMessageFromCustomer(Long customerId, SendMessageRequest request) {
@@ -55,10 +57,14 @@ public class ChatService {
         conversation.updateLastMessage(request.getContent(), message.getCreatedAt());
         conversation.incrementUnreadCountForAdmin();
         conversationRepository.save(conversation);
-        
-        MessageResponse response = convertToMessageResponse(message);
+          MessageResponse response = convertToMessageResponse(message);
         
         // Send real-time notification to admin
+        System.out.println("Sending message to admin via WebSocket: " + response.getId());
+        System.out.println("Topic: /topic/admin/messages");
+        System.out.println("Message content: " + response.getContent());
+        System.out.println("Sender: " + response.getSenderName());
+        System.out.println("Conversation ID: " + response.getConversationId());
         messagingTemplate.convertAndSend("/topic/admin/messages", response);
         
         return response;
@@ -92,10 +98,14 @@ public class ChatService {
         conversation.updateLastMessage(request.getContent(), message.getCreatedAt());
         conversation.incrementUnreadCountForCustomer();
         conversationRepository.save(conversation);
-        
-        MessageResponse response = convertToMessageResponse(message);
+          MessageResponse response = convertToMessageResponse(message);
         
         // Send real-time notification to customer
+        System.out.println("Sending message to customer via WebSocket: " + response.getId());
+        System.out.println("Topic: /topic/customer/" + conversation.getCustomer().getId() + "/messages");
+        System.out.println("Message content: " + response.getContent());
+        System.out.println("Sender: " + response.getSenderName());
+        System.out.println("Conversation ID: " + response.getConversationId());
         messagingTemplate.convertAndSend("/topic/customer/" + conversation.getCustomer().getId() + "/messages", response);
         
         return response;
@@ -196,11 +206,14 @@ public class ChatService {
         response.setLastMessageContent(conversation.getLastMessageContent());
         response.setLastMessageTimestamp(conversation.getLastMessageTimestamp());
         response.setUnreadCountCustomer(conversation.getUnreadCountCustomer());
-        response.setUnreadCountAdmin(conversation.getUnreadCountAdmin());
-        response.setStatus(conversation.getStatus().toString());
+        response.setUnreadCountAdmin(conversation.getUnreadCountAdmin());        response.setStatus(conversation.getStatus().toString());
         response.setCreatedAt(conversation.getCreatedAt());
         response.setUpdatedAt(conversation.getUpdatedAt());
-        response.setIsCustomerOnline(true); // This would be determined by WebSocket connection status
+        
+        // Set real-time online status using OnlineUserService
+        response.setIsCustomerOnline(onlineUserService.isUserOnline(conversation.getCustomer().getId()));
+        response.setIsAdminOnline(conversation.getAdmin() != null ? 
+            onlineUserService.isUserOnline(conversation.getAdmin().getId()) : false);
         
         if (includeMessages) {
             List<Message> messages = messageRepository.findByConversationOrderByCreatedAtAsc(conversation);
