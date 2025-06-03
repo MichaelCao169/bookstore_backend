@@ -21,4 +21,10 @@ public class MessageResponse {
     private Boolean isReadByAdmin;
     private LocalDateTime createdAt;
     private Boolean isFromAdmin;
+    
+    // File-related fields
+    private String fileName;
+    private String fileUrl;
+    private Long fileSize;
+    private String contentType;
 }

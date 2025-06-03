@@ -58,21 +58,46 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleOperationNotAllowed(OperationNotAllowedException ex, WebRequest request) {
         log.warn("Operation not allowed: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }
-
-    // *** THÊM HANDLER CHO InvalidTokenException *** (Từ bước trước)
+    }    // *** THÊM HANDLER CHO InvalidTokenException *** (Từ bước trước)
     @ExceptionHandler(InvalidTokenException.class)
     // @ResponseStatus đã được đặt trong Exception class
     public ResponseEntity<String> handleInvalidToken(InvalidTokenException ex, WebRequest request) {
         log.warn("Invalid token encountered: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
+
+    // *** THÊM HANDLER CHO Authentication Exceptions ***
+    @ExceptionHandler({
+        org.springframework.security.authentication.BadCredentialsException.class,
+        org.springframework.security.authentication.InternalAuthenticationServiceException.class,
+        org.springframework.security.core.userdetails.UsernameNotFoundException.class
+    })
+    public ResponseEntity<String> handleAuthenticationExceptions(Exception ex, WebRequest request) {
+        log.warn("Authentication failed: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body("Email hoặc mật khẩu không đúng");
+    }
+
+    @ExceptionHandler(org.springframework.security.authentication.DisabledException.class)
+    public ResponseEntity<String> handleDisabledException(Exception ex, WebRequest request) {
+        log.warn("Account disabled: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body("Tài khoản cần được xác minh. Vui lòng kiểm tra email của bạn.");
+    }
+
+    @ExceptionHandler(org.springframework.security.authentication.LockedException.class)
+    public ResponseEntity<String> handleLockedException(Exception ex, WebRequest request) {
+        log.warn("Account locked: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body("Tài khoản đã bị tạm khóa do đăng nhập sai nhiều lần");
+    }
+
     // Catch-all for other unexpected RuntimeExceptions
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<String> handleGenericRuntimeException(RuntimeException ex, WebRequest request) {
         log.error("Unexpected internal server error: ", ex); // Log the full stack trace
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("An unexpected internal error occurred. Please contact support.");
+                .body("Đã xảy ra lỗi hệ thống. Vui lòng liên hệ hỗ trợ.");
     }
 }

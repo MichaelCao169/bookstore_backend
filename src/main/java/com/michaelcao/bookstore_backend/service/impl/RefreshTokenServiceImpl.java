@@ -2,7 +2,7 @@ package com.michaelcao.bookstore_backend.service.impl;
 
 import com.michaelcao.bookstore_backend.entity.RefreshToken;
 import com.michaelcao.bookstore_backend.entity.User;
-import com.michaelcao.bookstore_backend.exception.TokenRefreshException; // Tạo exception này
+import com.michaelcao.bookstore_backend.exception.TokenRefreshException;
 import com.michaelcao.bookstore_backend.repository.RefreshTokenRepository;
 import com.michaelcao.bookstore_backend.repository.UserRepository;
 import com.michaelcao.bookstore_backend.service.RefreshTokenService;
@@ -12,10 +12,10 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration; // For cookie max age
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.UUID; // Simple way to generate random token string
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor

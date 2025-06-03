@@ -3,6 +3,7 @@ package com.michaelcao.bookstore_backend.service;
 import com.michaelcao.bookstore_backend.dto.auth.AuthResponse;
 import com.michaelcao.bookstore_backend.dto.auth.LoginRequest;
 import com.michaelcao.bookstore_backend.dto.auth.RegisterRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface AuthService {
     
@@ -30,12 +31,12 @@ public interface AuthService {
      * @param token Email verification token
      */
     void verifyEmail(String token);
-    
-    /**
+      /**
      * Refresh the authentication token
+     * @param request HTTP request containing refresh token cookie
      * @return New authentication response with refreshed token
      */
-    AuthResponse refreshToken();
+    AuthResponse refreshToken(HttpServletRequest request);
 
     /**
      * Process a forgot password request

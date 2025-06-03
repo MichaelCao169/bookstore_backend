@@ -39,6 +39,19 @@ public class Message {
     @Column(name = "is_read_by_admin", nullable = false)
     private Boolean isReadByAdmin = false;
 
+    // File-related fields for FILE type messages
+    @Column(name = "file_name")
+    private String fileName;
+
+    @Column(name = "file_url")
+    private String fileUrl;
+
+    @Column(name = "file_size")
+    private Long fileSize;
+
+    @Column(name = "content_type")
+    private String contentType;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

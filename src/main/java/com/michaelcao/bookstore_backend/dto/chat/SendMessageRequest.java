@@ -10,4 +10,10 @@ import lombok.NoArgsConstructor;
 public class SendMessageRequest {
     private String content;
     private String messageType = "TEXT"; // TEXT, IMAGE, FILE
+    
+    // File-related fields for FILE/IMAGE type messages
+    private String fileName;
+    private String fileUrl;
+    private Long fileSize;
+    private String contentType;
 }

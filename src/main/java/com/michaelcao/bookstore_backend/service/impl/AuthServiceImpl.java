@@ -7,7 +7,9 @@ import com.michaelcao.bookstore_backend.entity.Role;
 import com.michaelcao.bookstore_backend.entity.User;
 import com.michaelcao.bookstore_backend.entity.VerificationToken;
 import com.michaelcao.bookstore_backend.entity.PasswordResetToken;
+import com.michaelcao.bookstore_backend.entity.RefreshToken;
 import com.michaelcao.bookstore_backend.exception.ResourceNotFoundException;
+import com.michaelcao.bookstore_backend.exception.TokenRefreshException;
 import com.michaelcao.bookstore_backend.repository.RoleRepository;
 import com.michaelcao.bookstore_backend.repository.UserRepository;
 import com.michaelcao.bookstore_backend.repository.VerificationTokenRepository;
@@ -15,6 +17,9 @@ import com.michaelcao.bookstore_backend.repository.PasswordResetTokenRepository;
 import com.michaelcao.bookstore_backend.security.jwt.JwtUtil;
 import com.michaelcao.bookstore_backend.service.AuthService;
 import com.michaelcao.bookstore_backend.service.EmailService;
+import com.michaelcao.bookstore_backend.service.RefreshTokenService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +28,6 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,9 +50,12 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
-    
+    private final RefreshTokenService refreshTokenService;    
     @Value("${app.frontend-url}")
     private String frontendUrl;
+
+    @Value("${app.jwt.refresh-cookie-name:bookstore_refresh_token}")
+    private String refreshTokenCookieName;
 
     @Override
     @Transactional
@@ -98,9 +105,7 @@ public class AuthServiceImpl implements AuthService {
                 .verified(false)
                 .message("Registration successful. Please check your email to verify your account.")
                 .build();
-    }
-
-    @Override
+    }    @Override
     public AuthResponse login(LoginRequest request) {
         try {
             // Authenticate user
@@ -120,8 +125,11 @@ public class AuthServiceImpl implements AuthService {
 
             // Generate JWT token
             String token = jwtUtil.generateToken(user);
+            
+            // Create refresh token
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
-            // Return auth response
+            // Return auth response (refresh token will be set as cookie in controller layer if needed)
             return AuthResponse.builder()
                     .userId(user.getId())
                     .name(user.getName())
@@ -131,13 +139,20 @@ public class AuthServiceImpl implements AuthService {
                             .map(role -> role.getAuthority())
                             .collect(Collectors.toList()))
                     .accessToken(token)
+                    .refreshToken(refreshToken.getToken()) // Include for cookie setting
                     .verified(true)
                     .build();
         } catch (DisabledException e) {
             log.warn("Login attempt for disabled account: {}", request.getEmail());
             return AuthResponse.builder()
                     .verified(false)
-                    .message("Your account needs to be verified. Please check your email.")
+                    .message("Tài khoản cần được xác minh. Vui lòng kiểm tra email của bạn.")
+                    .build();
+        } catch (Exception e) {
+            log.warn("Login failed for email: {} - {}", request.getEmail(), e.getMessage());
+            return AuthResponse.builder()
+                    .verified(false)
+                    .message("Email hoặc mật khẩu không đúng")
                     .build();
         }
     }
@@ -170,35 +185,46 @@ public class AuthServiceImpl implements AuthService {
         tokenRepository.delete(verificationToken);
         
         log.info("Email verified successfully for user: {}", user.getEmail());
-    }
-
-    @Override
-    public AuthResponse refreshToken() {
-        // Get the current user from security context
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalStateException("User not authenticated");
+    }    @Override
+    public AuthResponse refreshToken(HttpServletRequest request) {
+        String refreshToken = getRefreshTokenFromCookies(request);
+        
+        if (refreshToken == null) {
+            throw new TokenRefreshException("Refresh token is missing from cookies");
         }
 
-        User user = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + authentication.getName()));
-
-        // Generate new token
-        String token = jwtUtil.generateToken(user);
-        log.info("Token refreshed for user: {}", user.getEmail());
-
-        // Return auth response
-        return AuthResponse.builder()
-                .userId(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .avatarUrl(user.getAvatarUrl())
-                .roles(user.getAuthorities().stream()
-                        .map(role -> role.getAuthority())
-                        .collect(Collectors.toList()))
-                .accessToken(token)
-                .verified(true)
-                .build();
+        return refreshTokenService.findByToken(refreshToken)
+                .map(refreshTokenService::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(user -> {
+                    // Generate new access token
+                    String newAccessToken = jwtUtil.generateToken(user);
+                    
+                    log.info("Token refreshed for user: {}", user.getEmail());
+                    
+                    // Return auth response with new access token
+                    return AuthResponse.builder()
+                            .userId(user.getId())
+                            .name(user.getName())
+                            .email(user.getEmail())
+                            .avatarUrl(user.getAvatarUrl())
+                            .roles(user.getAuthorities().stream()
+                                    .map(role -> role.getAuthority())
+                                    .collect(Collectors.toList()))
+                            .accessToken(newAccessToken)
+                            .verified(true)
+                            .build();
+                })
+                .orElseThrow(() -> new TokenRefreshException("Refresh token is not valid"));
+    }    private String getRefreshTokenFromCookies(HttpServletRequest request) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (refreshTokenCookieName.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
 
     @Override

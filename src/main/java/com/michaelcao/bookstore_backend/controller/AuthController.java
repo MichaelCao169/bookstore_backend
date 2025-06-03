@@ -6,6 +6,9 @@ import com.michaelcao.bookstore_backend.dto.auth.RegisterRequest;
 import com.michaelcao.bookstore_backend.dto.auth.ForgotPasswordRequest;
 import com.michaelcao.bookstore_backend.dto.auth.ResetPasswordRequest;
 import com.michaelcao.bookstore_backend.service.AuthService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,18 +29,45 @@ public class AuthController {
         log.info("Processing registration request for email: {}", request.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(authService.register(request));
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+    }    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         log.info("Processing login request for email: {}", request.getEmail());
-        return ResponseEntity.ok(authService.login(request));
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
+        AuthResponse authResponse = authService.login(request);
+        
+        // Check if login was successful
+        if (authResponse.getVerified() == null || !authResponse.getVerified()) {
+            // Login failed - return 401 Unauthorized with error message
+            log.warn("Login failed for email: {}", request.getEmail());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authResponse);
+        }
+        
+        // Set refresh token as HttpOnly cookie if login successful
+        if (authResponse.getRefreshToken() != null) {
+            Cookie refreshTokenCookie = new Cookie("bookstore_refresh_token", authResponse.getRefreshToken());
+            refreshTokenCookie.setHttpOnly(true);
+            refreshTokenCookie.setSecure(false); // Set to true in production with HTTPS
+            refreshTokenCookie.setPath("/");
+            refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
+            response.addCookie(refreshTokenCookie);
+            
+            // Remove refresh token from response body for security
+            authResponse.setRefreshToken(null);
+        }
+        
+        return ResponseEntity.ok(authResponse);
+    }@PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletResponse response) {
         log.info("Processing logout request");
         authService.logout();
+        
+        // Clear refresh token cookie
+        Cookie refreshTokenCookie = new Cookie("bookstore_refresh_token", null);
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setSecure(false); // Set to true in production with HTTPS
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setMaxAge(0); // Delete cookie
+        response.addCookie(refreshTokenCookie);
+        
         return ResponseEntity.ok("Logged out successfully");
     }
 
@@ -46,12 +76,10 @@ public class AuthController {
         log.info("Processing email verification request");
         authService.verifyEmail(token);
         return ResponseEntity.ok("Email verified successfully");
-    }
-
-    @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refreshToken() {
+    }    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refreshToken(HttpServletRequest request) {
         log.info("Processing token refresh request");
-        return ResponseEntity.ok(authService.refreshToken());
+        return ResponseEntity.ok(authService.refreshToken(request));
     }
 
     @PostMapping("/forgot-password")

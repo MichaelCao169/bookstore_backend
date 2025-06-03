@@ -1,9 +1,11 @@
 package com.michaelcao.bookstore_backend.service.impl;
 
+import com.michaelcao.bookstore_backend.dto.address.AddressDTO;
 import com.michaelcao.bookstore_backend.dto.user.ChangePasswordRequest;
 import com.michaelcao.bookstore_backend.dto.user.UserProfileDTO;
 import com.michaelcao.bookstore_backend.dto.user.UpdateAvatarRequest;
 import com.michaelcao.bookstore_backend.dto.user.UpdateProfileRequest;
+import com.michaelcao.bookstore_backend.entity.Address;
 import com.michaelcao.bookstore_backend.entity.User;
 import com.michaelcao.bookstore_backend.exception.ResourceNotFoundException;
 import com.michaelcao.bookstore_backend.repository.UserRepository;
@@ -27,15 +29,29 @@ import java.util.Set; // Import Set
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder; // Inject PasswordEncoder
-
-    // --- Helper method: Map User entity sang UserProfileDTO ---
+    private final PasswordEncoder passwordEncoder; // Inject PasswordEncoder    // --- Helper method: Map User entity sang UserProfileDTO ---
     private UserProfileDTO mapToUserProfileDTO(User user) {
+        AddressDTO addressDTO = null;
+        if (user.getDefaultAddress() != null) {
+            Address address = user.getDefaultAddress();
+            addressDTO = new AddressDTO(
+                address.getStreet(),
+                address.getCity(),
+                address.getDistrict(),
+                address.getCountry(),
+                address.getPhone(),
+                address.getRecipientName()
+            );
+        }
+        
         return new UserProfileDTO(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getAvatarUrl()
+                user.getAvatarUrl(),
+                user.getDisplayName(),
+                user.getPhone(),
+                addressDTO
         );
     }
     private UserManagementDTO mapToUserManagementDTO(User user) {
@@ -101,9 +117,7 @@ public class UserServiceImpl implements UserService {
         // TODO: Nên vô hiệu hóa các Refresh Token cũ của user này sau khi đổi mật khẩu
         // refreshTokenService.deleteByUserId(userId);
         // log.info("Old refresh tokens invalidated for user ID: {}", userId);
-    }
-
-    // --- Implement updateProfile ---
+    }    // --- Implement updateProfile ---
     @Override
     @Transactional
     public UserProfileDTO updateProfile(Long userId, UpdateProfileRequest request) {
@@ -111,9 +125,33 @@ public class UserServiceImpl implements UserService {
          User user = userRepository.findById(userId)
                  .orElseThrow(() -> new ResourceNotFoundException("User", "ID", userId));
 
-         // Chỉ cho phép cập nhật tên trong ví dụ này
+         // Cập nhật tên
          if (request.getName() != null && !request.getName().isBlank()) {
               user.setName(request.getName());
+         }
+         
+         // Cập nhật tên hiển thị
+         if (request.getDisplayName() != null) {
+              user.setDisplayName(request.getDisplayName());
+         }
+         
+         // Cập nhật số điện thoại
+         if (request.getPhone() != null) {
+              user.setPhone(request.getPhone());
+         }
+         
+         // Cập nhật địa chỉ mặc định
+         if (request.getDefaultAddress() != null) {
+              AddressDTO addressDTO = request.getDefaultAddress();
+              Address address = new Address(
+                  addressDTO.getStreet(),
+                  addressDTO.getCity(),
+                  addressDTO.getDistrict(),
+                  addressDTO.getCountry(),
+                  addressDTO.getPhone(),
+                  addressDTO.getRecipientName()
+              );
+              user.setDefaultAddress(address);
          }
 
          User updatedUser = userRepository.save(user);

@@ -1,6 +1,7 @@
 package com.michaelcao.bookstore_backend.config;
 
 
+import com.michaelcao.bookstore_backend.entity.Address;
 import com.michaelcao.bookstore_backend.entity.Role;
 import com.michaelcao.bookstore_backend.entity.User;
 import com.michaelcao.bookstore_backend.repository.RoleRepository;
@@ -88,13 +89,11 @@ public class DataInitializer implements CommandLineRunner {
      *
      * @param adminRoleEntity Đối tượng Role đại diện cho "ROLE_ADMIN".
      * @param customerRoleEntity Đối tượng Role đại diện cho "ROLE_CUSTOMER".
-     */
-    private void createAdminUserIfNotFound(Role adminRoleEntity, Role customerRoleEntity) {
+     */    private void createAdminUserIfNotFound(Role adminRoleEntity, Role customerRoleEntity) {
         if (!userRepository.existsByEmail(adminDefaultEmail)) {
             Set<Role> adminRolesSet = new HashSet<>();
             adminRolesSet.add(adminRoleEntity);    // Thêm ROLE_ADMIN
             adminRolesSet.add(customerRoleEntity); // << THÊM ROLE_CUSTOMER
-
 
             User adminUser = User.builder()
                     .name(adminDefaultName)
@@ -103,6 +102,7 @@ public class DataInitializer implements CommandLineRunner {
                     .roles(adminRolesSet) // Gán Set chứa cả hai vai trò
                     .enabled(true)
                     .avatarUrl(adminDefaultAvatarUrl)
+                    .defaultAddress(createDefaultAddress()) // Thêm địa chỉ mặc định
                     .build();
 
 
@@ -143,12 +143,12 @@ public class DataInitializer implements CommandLineRunner {
 
                 if (needsUpdate) {
                     userRepository.save(existingAdmin);
-                } else {
-                    String currentRoles = existingAdmin.getRoles().stream()
+                } else {                    String currentRoles = existingAdmin.getRoles().stream()
                             .map(Role::getName)
                             .collect(Collectors.joining(", "));
                     log.debug("Người dùng Admin '{}' đã có các vai trò cần thiết: [{}].", adminDefaultEmail, currentRoles);
-                }            });
+                }
+            });
         }
     }
 
@@ -159,8 +159,7 @@ public class DataInitializer implements CommandLineRunner {
      * @param customerRoleEntity Đối tượng Role đại diện cho "ROLE_CUSTOMER".
      */
     private void createTestUserIfNotFound(Role customerRoleEntity) {
-        if (!userRepository.existsByEmail(testUserEmail)) {
-            Set<Role> customerRolesSet = new HashSet<>();
+        if (!userRepository.existsByEmail(testUserEmail)) {            Set<Role> customerRolesSet = new HashSet<>();
             customerRolesSet.add(customerRoleEntity); // Chỉ thêm ROLE_CUSTOMER
 
             User testUser = User.builder()
@@ -170,6 +169,7 @@ public class DataInitializer implements CommandLineRunner {
                     .roles(customerRolesSet)
                     .enabled(true) // Đặt enabled=true để có thể đăng nhập ngay
                     .avatarUrl(testUserAvatarUrl)
+                    .defaultAddress(createDefaultAddress()) // Thêm địa chỉ mặc định
                     .build();
 
             userRepository.save(testUser);
@@ -178,6 +178,20 @@ public class DataInitializer implements CommandLineRunner {
         } else {
             log.debug("Tài khoản test user với email '{}' đã tồn tại.", testUserEmail);
         }
+    }
+
+    /**
+     * Tạo địa chỉ mặc định với giá trị "N/A" để tránh lỗi NOT NULL
+     */
+    private Address createDefaultAddress() {
+        return new Address(
+            "N/A",      // street
+            "N/A",      // city 
+            "N/A",      // district
+            "N/A",      // country
+            "N/A",      // phone
+            "N/A"       // recipientName
+        );
     }
 }
 

@@ -35,10 +35,17 @@ public class User implements UserDetails {
     private String password; // Hashed password
 
     @Column(name = "is_enabled", nullable = false)
-    private boolean enabled = false; // Default: needs verification
-
-    @Column(name = "avatar_url")
+    private boolean enabled = false; // Default: needs verification    @Column(name = "avatar_url")
     private String avatarUrl = "/default-avatar.png"; // Mặc định có ảnh đại diện
+
+    @Column(name = "display_name")
+    private String displayName; // Tên hiển thị (username)
+    
+    @Column(name = "phone", length = 20)
+    private String phone; // Số điện thoại
+    
+    @Embedded
+    private Address defaultAddress; // Địa chỉ mặc định
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(name = "user_roles",

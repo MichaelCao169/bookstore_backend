@@ -13,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class AuthResponse {
     private String accessToken;
+    private String refreshToken; // Add refresh token field
     @Builder.Default
     // Refresh token is typically sent via HttpOnly Cookie
     private String tokenType = "Bearer";

@@ -41,8 +41,7 @@ public class ChatService {
         // Find or create conversation
         Conversation conversation = conversationRepository.findActiveConversationByCustomerId(customerId)
                 .orElseGet(() -> createNewConversation(customer));
-        
-        // Create message
+          // Create message
         Message message = new Message();
         message.setConversation(conversation);
         message.setSender(customer);
@@ -50,6 +49,14 @@ public class ChatService {
         message.setMessageType(Message.MessageType.valueOf(request.getMessageType()));
         message.setIsReadByCustomer(true); // Customer has read their own message
         message.setIsReadByAdmin(false);
+        
+        // Set file-related fields if present
+        if (request.getFileName() != null) {
+            message.setFileName(request.getFileName());
+            message.setFileUrl(request.getFileUrl());
+            message.setFileSize(request.getFileSize());
+            message.setContentType(request.getContentType());
+        }
         
         message = messageRepository.save(message);
         
@@ -82,8 +89,7 @@ public class ChatService {
         if (conversation.getAdmin() == null) {
             conversation.setAdmin(admin);
         }
-        
-        // Create message
+          // Create message
         Message message = new Message();
         message.setConversation(conversation);
         message.setSender(admin);
@@ -91,6 +97,14 @@ public class ChatService {
         message.setMessageType(Message.MessageType.valueOf(request.getMessageType()));
         message.setIsReadByAdmin(true); // Admin has read their own message
         message.setIsReadByCustomer(false);
+        
+        // Set file-related fields if present
+        if (request.getFileName() != null) {
+            message.setFileName(request.getFileName());
+            message.setFileUrl(request.getFileUrl());
+            message.setFileSize(request.getFileSize());
+            message.setContentType(request.getContentType());
+        }
         
         message = messageRepository.save(message);
         
@@ -174,8 +188,7 @@ public class ChatService {
         conversation.setStatus(Conversation.ConversationStatus.ACTIVE);
         conversation.setLastMessageTimestamp(LocalDateTime.now());
         return conversationRepository.save(conversation);
-    }
-      private MessageResponse convertToMessageResponse(Message message) {
+    }      private MessageResponse convertToMessageResponse(Message message) {
         MessageResponse response = new MessageResponse();
         response.setId(message.getId());
         response.setConversationId(message.getConversation().getId());
@@ -188,6 +201,13 @@ public class ChatService {
         response.setIsReadByAdmin(message.getIsReadByAdmin());
         response.setCreatedAt(message.getCreatedAt());
         response.setIsFromAdmin(message.isFromAdmin());
+        
+        // Set file-related fields if present
+        response.setFileName(message.getFileName());
+        response.setFileUrl(message.getFileUrl());
+        response.setFileSize(message.getFileSize());
+        response.setContentType(message.getContentType());
+        
         return response;
     }
       private ConversationResponse convertToConversationResponse(Conversation conversation, boolean includeMessages) {

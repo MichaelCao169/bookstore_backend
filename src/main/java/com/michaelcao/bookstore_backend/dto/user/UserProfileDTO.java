@@ -1,5 +1,6 @@
 package com.michaelcao.bookstore_backend.dto.user;
 
+import com.michaelcao.bookstore_backend.dto.address.AddressDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,5 +13,8 @@ public class UserProfileDTO {
     private String name;
     private String email;
     private String avatarUrl;
+    private String displayName; // Tên hiển thị
+    private String phone; // Số điện thoại
+    private AddressDTO defaultAddress; // Địa chỉ mặc định
     // Không bao gồm password hay roles ở đây
 }
