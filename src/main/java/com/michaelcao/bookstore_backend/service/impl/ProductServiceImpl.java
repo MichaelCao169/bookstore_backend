@@ -7,7 +7,6 @@ import com.michaelcao.bookstore_backend.dto.product.UpdateProductRequest;
 import com.michaelcao.bookstore_backend.entity.Category;
 import com.michaelcao.bookstore_backend.entity.OrderStatus;
 import com.michaelcao.bookstore_backend.entity.Product;
-import com.michaelcao.bookstore_backend.exception.DuplicateResourceException;
 import com.michaelcao.bookstore_backend.exception.ResourceNotFoundException;
 import com.michaelcao.bookstore_backend.repository.CategoryRepository;
 import com.michaelcao.bookstore_backend.repository.OrderRepository;
@@ -21,7 +20,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils; // Import StringUtils
 import com.michaelcao.bookstore_backend.repository.ReviewRepository;
 import com.michaelcao.bookstore_backend.repository.ReviewRepository.ReviewStats;
 import java.util.List; // Import List
@@ -42,19 +40,19 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ReviewRepository reviewRepository;
-    private final OrderRepository orderRepository;
-    // --- Helper methods for mapping ---
+    private final OrderRepository orderRepository;    // --- Helper methods for mapping ---
     private ProductDTO mapToProductDTO(Product product, ReviewStats stats) {
         ProductDTO dto = new ProductDTO();
-        dto.setId(product.getId());
+        dto.setProductId(product.getProductId());
         dto.setTitle(product.getTitle());
         dto.setAuthor(product.getAuthor());
-        dto.setIsbn(product.getIsbn());
         dto.setDescription(product.getDescription());
-        dto.setPrice(product.getPrice());
-        dto.setStockQuantity(product.getStockQuantity());
-        dto.setImageUrl(product.getImageUrl());
-        dto.setPublishedDate(product.getPublishedDate());
+        dto.setOriginalPrice(product.getOriginalPrice());
+        dto.setCurrentPrice(product.getCurrentPrice());
+        dto.setQuantity(product.getQuantity());
+        dto.setCoverLink(product.getCoverLink());
+        dto.setPages(product.getPages());
+        dto.setPublisher(product.getPublisher());
         dto.setCreatedAt(product.getCreatedAt());
         dto.setUpdatedAt(product.getUpdatedAt());
         
@@ -102,28 +100,21 @@ public class ProductServiceImpl implements ProductService {
                     log.warn("Category not found with ID: {}", categoryId);
                     return new ResourceNotFoundException("Category", "ID", categoryId);
                 });
-    }
-
-    @Override
+    }    @Override
     @Transactional
     public ProductDTO createProduct(CreateProductRequest request) {
         log.debug("Attempting to create product with title: {}", request.getTitle());
 
-        // Kiểm tra ISBN trùng lặp (nếu ISBN được cung cấp)
-        if (StringUtils.hasText(request.getIsbn()) && productRepository.existsByIsbn(request.getIsbn())) {
-            log.warn("Product creation failed: ISBN '{}' already exists.", request.getIsbn());
-            throw new DuplicateResourceException("Product with ISBN '" + request.getIsbn() + "' already exists.");
-        }
-
         Product product = new Product();
         product.setTitle(request.getTitle());
         product.setAuthor(request.getAuthor());
-        product.setIsbn(request.getIsbn());
         product.setDescription(request.getDescription());
-        product.setPrice(request.getPrice());
-        product.setStockQuantity(request.getStockQuantity());
-        product.setImageUrl(request.getImageUrl());
-        product.setPublishedDate(request.getPublishedDate());
+        product.setOriginalPrice(request.getOriginalPrice());
+        product.setCurrentPrice(request.getCurrentPrice());
+        product.setQuantity(request.getQuantity());
+        product.setCoverLink(request.getCoverLink());
+        product.setPages(request.getPages());
+        product.setPublisher(request.getPublisher());
         
         // Tìm category chính theo ID (nếu có)
         if (request.getCategoryId() != null) {
@@ -148,37 +139,35 @@ public class ProductServiceImpl implements ProductService {
         // Đảm bảo danh mục chính cũng nằm trong danh sách categories
         else if (product.getCategory() != null) {
             product.getCategories().add(product.getCategory());
-        }
-
-        Product savedProduct = productRepository.save(product);
-        log.info("Product created successfully with ID: {}", savedProduct.getId());
+        }        Product savedProduct = productRepository.save(product);
+        log.info("Product created successfully with ID: {}", savedProduct.getProductId());
         return mapToProductDTO(savedProduct);
-    }
-
-    @Override
+    }    @Override
     @Transactional(readOnly = true)
     public ProductDTO getProductById(UUID id) {
         log.debug("Fetching product with ID: {}", id);
-        // Lấy Product (nên JOIN FETCH Category nếu cần tối ưu)
-        Product product = productRepository.findById(id) // Tạm thời chưa fetch category
+        
+        // *** OPTIMIZED: Use JOIN FETCH to load product with categories in one query ***
+        Product product = productRepository.findByProductIdWithCategoriesFetched(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "ID", id));
 
-        // Lấy review stats cho sản phẩm này
-        // findReviewStatsByProductIdsProjection trả về List, lấy phần tử đầu nếu có
+        // *** OPTIMIZED: Get review stats in parallel/same transaction ***
         ReviewStats stats = reviewRepository.findReviewStatsByProductIdsProjection(Collections.singletonList(id))
                 .stream().findFirst().orElse(null);
 
-        // Map Product và Stats sang DTO
-        return mapToProductDTO(product, stats);
-    }
-    // Phương thức chung để xử lý Page<Product> và thêm Review Stats
+        // Map Product và Stats sang DTO (no additional queries needed since categories are fetched)
+        ProductDTO result = mapToProductDTO(product, stats);
+        
+        log.debug("Successfully fetched product with ID: {} in optimized way", id);
+        return result;
+    }    // Phương thức chung để xử lý Page<Product> và thêm Review Stats
     private Page<ProductDTO> mapProductPageToDtoWithStats(Page<Product> productPage) {
         List<Product> productsOnPage = productPage.getContent();
         Map<UUID, ReviewStats> statsMap = Collections.emptyMap(); // Khởi tạo map rỗng
 
         if (!productsOnPage.isEmpty()) {
             // Lấy danh sách Product IDs
-            List<UUID> productIds = productsOnPage.stream().map(Product::getId).collect(Collectors.toList());
+            List<UUID> productIds = productsOnPage.stream().map(Product::getProductId).collect(Collectors.toList());
 
             // Query 1 lần để lấy stats cho tất cả product IDs trên trang
             List<ReviewStats> reviewStatsList = reviewRepository.findReviewStatsByProductIdsProjection(productIds);
@@ -191,22 +180,17 @@ public class ProductServiceImpl implements ProductService {
         // Map Page<Product> sang Page<ProductDTO>, truyền ReviewStats tương ứng vào hàm map
         // Cần final hoặc effectively final để dùng trong lambda
         final Map<UUID, ReviewStats> finalStatsMap = statsMap;
-        return productPage.map(product -> mapToProductDTO(product, finalStatsMap.get(product.getId())));
-    }
-
-    @Override
+        return productPage.map(product -> mapToProductDTO(product, finalStatsMap.get(product.getProductId())));
+    }@Override
     @Transactional(readOnly = true)
     public Page<ProductDTO> getAllProducts(Pageable pageable) {
         log.debug("Fetching all products with pagination: {}", pageable);
-        // findById trả về Page<Product>, cần map sang Page<ProductDTO>
-        Page<Product> productPage = productRepository.findAll(pageable);
-        // Sử dụng map của Page để chuyển đổi content
-        return productPage.map(this::mapToProductDTO);
-        // Lưu ý: Vẫn có thể bị N+1 cho category. Cần JOIN FETCH trong query `findAll` nếu muốn tối ưu.
-        // Ví dụ sửa ProductRepository:
-        // @Query(value = "SELECT p FROM Product p JOIN FETCH p.category",
-        //        countQuery = "SELECT count(p) FROM Product p")
-        // Page<Product> findAllWithCategory(Pageable pageable);
+        
+        // *** OPTIMIZED: Use JOIN FETCH to prevent N+1 queries ***
+        Page<Product> productPage = productRepository.findAllWithCategoriesFetched(pageable);
+        
+        // Use the optimized method that batches review stats queries
+        return mapProductPageToDtoWithStats(productPage);
     }
     @Override
     @Transactional(readOnly = true)
@@ -230,9 +214,7 @@ public class ProductServiceImpl implements ProductService {
         log.debug("Fetching products for category ID: {} with pagination: {}", categoryId, pageable);
         // Gọi lại filterProducts để tận dụng logic và xử lý stats
         return filterProducts(categoryId, null, null, null, null, null, pageable);
-    }
-
-    @Override
+    }    @Override
     @Transactional
     public ProductDTO updateProduct(UUID id, UpdateProductRequest request) {
         log.debug("Attempting to update product with ID: {}", id);
@@ -241,22 +223,16 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "ID", id));
 
-        // Kiểm tra ISBN trùng lặp (nếu ISBN được cung cấp và đã thay đổi)
-        if (StringUtils.hasText(request.getIsbn()) && !request.getIsbn().equals(product.getIsbn())
-                && productRepository.existsByIsbn(request.getIsbn())) {
-            log.warn("Product update failed: ISBN '{}' already exists.", request.getIsbn());
-            throw new DuplicateResourceException("Product with ISBN '" + request.getIsbn() + "' already exists.");
-        }
-
         // Cập nhật thông tin sản phẩm
         product.setTitle(request.getTitle());
         product.setAuthor(request.getAuthor());
-        product.setIsbn(request.getIsbn());
         product.setDescription(request.getDescription());
-        product.setPrice(request.getPrice());
-        product.setStockQuantity(request.getStockQuantity());
-        product.setImageUrl(request.getImageUrl());
-        product.setPublishedDate(request.getPublishedDate());
+        product.setOriginalPrice(request.getOriginalPrice());
+        product.setCurrentPrice(request.getCurrentPrice());
+        product.setQuantity(request.getQuantity());
+        product.setCoverLink(request.getCoverLink());
+        product.setPages(request.getPages());
+        product.setPublisher(request.getPublisher());
 
         // Cập nhật category chính nếu có thay đổi
         if (request.getCategoryId() != null) {
@@ -285,10 +261,8 @@ public class ProductServiceImpl implements ProductService {
         // Đảm bảo danh mục chính cũng nằm trong danh sách categories
         else if (product.getCategory() != null) {
             product.getCategories().add(product.getCategory());
-        }
-
-        Product updatedProduct = productRepository.save(product);
-        log.info("Product updated successfully with ID: {}", updatedProduct.getId());
+        }        Product updatedProduct = productRepository.save(product);
+        log.info("Product updated successfully with ID: {}", updatedProduct.getProductId());
         return mapToProductDTO(updatedProduct);
     }
 
@@ -332,5 +306,14 @@ public class ProductServiceImpl implements ProductService {
         
         log.debug("User ID {} has purchased product ID {}: {}", userId, productId, hasPurchased);
         return hasPurchased;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> getAllAuthors() {
+        log.debug("Fetching all unique authors from database");
+        List<String> authors = productRepository.findAllUniqueAuthors();
+        log.debug("Found {} unique authors", authors.size());
+        return authors;
     }
 }

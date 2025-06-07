@@ -54,12 +54,12 @@ public class ProductSpecification {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) > 0) {
-                // Thêm điều kiện price >= minPrice
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("price"), minPrice));
+                // Thêm điều kiện currentPrice >= minPrice
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("currentPrice"), minPrice));
             }
             if (maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) > 0 && (minPrice == null || maxPrice.compareTo(minPrice) >= 0)) {
-                // Thêm điều kiện price <= maxPrice (chỉ thêm nếu max hợp lệ và >= min)
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice));
+                // Thêm điều kiện currentPrice <= maxPrice (chỉ thêm nếu max hợp lệ và >= min)
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("currentPrice"), maxPrice));
             }
 
             if (predicates.isEmpty()) {
@@ -75,8 +75,8 @@ public class ProductSpecification {
      */
     public static Specification<Product> isAvailable() {
         return (root, query, criteriaBuilder) ->
-                // Điều kiện: stockQuantity > 0
-                criteriaBuilder.greaterThan(root.get("stockQuantity"), 0);
+                // Điều kiện: quantity > 0
+                criteriaBuilder.greaterThan(root.get("quantity"), 0);
     }
 
     /**

@@ -37,10 +37,8 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, UUID> { //
      * @param product Đối tượng Product.
      * @return Optional chứa OrderItem nếu tìm thấy.
      */
-    Optional<OrderItem> findByOrderAndProduct(Order order, Product product);
-
-    // Có thể thêm các query khác, ví dụ: đếm số lượng sản phẩm đã bán...
-    // @Query("SELECT SUM(oi.quantity) FROM OrderItem oi WHERE oi.product.id = :productId")
+    Optional<OrderItem> findByOrderAndProduct(Order order, Product product);    // Có thể thêm các query khác, ví dụ: đếm số lượng sản phẩm đã bán...
+    // @Query("SELECT SUM(oi.quantity) FROM OrderItem oi WHERE oi.product.productId = :productId")
     // Integer countTotalSoldByProductId(@Param("productId") UUID productId);
     /**
      * Tìm tất cả OrderItem thuộc về một danh sách các Order ID,

@@ -88,9 +88,8 @@ public interface OrderRepository extends JpaRepository<Order, UUID> { // Entity:
      * @param userId ID của User.
      * @param productId ID của Product.
      * @return true nếu tồn tại đơn hàng thỏa mãn, false nếu không.
-     */
-    @Query("SELECT COUNT(o.id) > 0 FROM Order o JOIN o.orderItems oi " +
-            "WHERE o.user.id = :userId AND oi.product.id = :productId AND o.status = :status")
+     */    @Query("SELECT COUNT(o.id) > 0 FROM Order o JOIN o.orderItems oi " +
+            "WHERE o.user.id = :userId AND oi.product.productId = :productId AND o.status = :status")
     boolean existsByUserIdAndItemsProductIdAndStatusDelivered(
             @Param("userId") Long userId,
             @Param("productId") UUID productId,
@@ -98,7 +97,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> { // Entity:
     );
 
     // Hoặc cách đơn giản hơn nếu chỉ cần biết user có từng đặt hàng sản phẩm đó (không cần biết trạng thái)
-    // @Query("SELECT COUNT(o.id) > 0 FROM Order o JOIN o.orderItems oi WHERE o.user.id = :userId AND oi.product.id = :productId")
+    // @Query("SELECT COUNT(o.id) > 0 FROM Order o JOIN o.orderItems oi WHERE o.user.id = :userId AND oi.product.productId = :productId")
     // boolean existsByUserIdAndItemsProductId(@Param("userId") Long userId, @Param("productId") Long productId);
 
 }

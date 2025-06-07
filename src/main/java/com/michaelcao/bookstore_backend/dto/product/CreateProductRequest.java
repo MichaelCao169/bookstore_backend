@@ -4,7 +4,6 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -17,28 +16,34 @@ public class CreateProductRequest {
     @Size(max = 150)
     private String author;
 
-    @Size(max = 20, message = "ISBN cannot exceed 20 characters")
-    private String isbn; // Có thể là null
+    @NotNull(message = "Original price cannot be null")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Original price must be positive")
+    @Digits(integer = 10, fraction = 2, message = "Original price format invalid")
+    private BigDecimal originalPrice;
 
-    private String description; // Có thể là null
+    @NotNull(message = "Current price cannot be null")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Current price must be positive")
+    @Digits(integer = 10, fraction = 2, message = "Current price format invalid")
+    private BigDecimal currentPrice;
 
-    @NotNull(message = "Price cannot be null")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Price must be positive")
-    @Digits(integer = 10, fraction = 2, message = "Price format invalid (max 10 integer, 2 fraction digits)")
-    private BigDecimal price;
+    @NotNull(message = "Quantity cannot be null")
+    @Min(value = 0, message = "Quantity cannot be negative")
+    private Integer quantity;
 
-    @NotNull(message = "Stock quantity cannot be null")
-    @Min(value = 0, message = "Stock quantity cannot be negative")
-    private Integer stockQuantity;
+    @Min(value = 1, message = "Pages must be at least 1")
+    private Integer pages;
 
-    @Size(max = 500, message = "Image URL cannot exceed 500 characters")
-    private String imageUrl; // Có thể là null
+    @Size(max = 200, message = "Publisher name cannot exceed 200 characters")
+    private String publisher;
 
-    private LocalDate publishedDate; // Có thể là null
+    @Size(max = 500, message = "Cover link cannot exceed 500 characters")
+    private String coverLink;
+
+    private String description;
 
     @NotNull(message = "Category ID cannot be null")
-    @Min(value = 1, message = "Category ID must be positive") // ID thường bắt đầu từ 1
-    private Long categoryId; // Danh mục chính (có thể null nếu dùng categoryIds)
+    @Min(value = 1, message = "Category ID must be positive")
+    private Long categoryId;
     
-    private List<Long> categoryIds; // Danh sách ID của các danh mục (mới)
+    private List<Long> categoryIds;
 }

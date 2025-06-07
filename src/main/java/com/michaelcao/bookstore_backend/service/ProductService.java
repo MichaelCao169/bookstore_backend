@@ -6,6 +6,7 @@ import com.michaelcao.bookstore_backend.dto.product.UpdateProductRequest;
 import org.springframework.data.domain.Page; // Import Page
 import org.springframework.data.domain.Pageable; // Import Pageable
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 public interface ProductService {
@@ -15,7 +16,6 @@ public interface ProductService {
      * @param request DTO chứa thông tin sản phẩm mới.
      * @return ProductDTO của sản phẩm vừa tạo.
      * @throws com.michaelcao.bookstore_backend.exception.ResourceNotFoundException Nếu categoryId không tồn tại.
-     * @throws com.michaelcao.bookstore_backend.exception.DuplicateResourceException Nếu ISBN đã tồn tại.
      */
     ProductDTO createProduct(CreateProductRequest request);
 
@@ -67,7 +67,6 @@ public interface ProductService {
      * @param request DTO chứa thông tin cập nhật.
      * @return ProductDTO của sản phẩm sau khi cập nhật.
      * @throws com.michaelcao.bookstore_backend.exception.ResourceNotFoundException Nếu productId hoặc categoryId không tồn tại.
-     * @throws com.michaelcao.bookstore_backend.exception.DuplicateResourceException Nếu ISBN mới trùng với ISBN khác (ngoại trừ chính nó).
      */
     ProductDTO updateProduct(UUID id, UpdateProductRequest request);
 
@@ -96,4 +95,10 @@ public interface ProductService {
      * @return true nếu người dùng đã mua và nhận hàng sản phẩm này, false nếu chưa
      */
     boolean hasUserPurchasedProduct(Long userId, UUID productId);
+
+    /**
+     * Lấy danh sách tất cả tác giả có sản phẩm trong hệ thống
+     * @return List chứa danh sách tên tác giả duy nhất
+     */
+    List<String> getAllAuthors();
 }

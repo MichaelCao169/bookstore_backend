@@ -7,11 +7,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp; // Import cho tự động tạo timestamp
 import org.hibernate.annotations.UpdateTimestamp;   // Import cho tự động cập nhật timestamp
-import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal; // Dùng BigDecimal cho tiền tệ chính xác hơn
 import java.time.Instant;    // Dùng Instant (UTC) cho timestamp
-import java.time.LocalDate;  // Dùng LocalDate cho ngày xuất bản
 import java.util.UUID;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,18 +19,19 @@ import java.util.Set;
 @Table(name = "products", indexes = { // Thêm index để tăng tốc độ tìm kiếm
         @Index(name = "idx_product_title", columnList = "title"),
         @Index(name = "idx_product_author", columnList = "author"),
-        @Index(name = "idx_product_category", columnList = "categoryId")
+        @Index(name = "idx_product_category", columnList = "categoryId"),
+        @Index(name = "idx_product_current_price", columnList = "current_price"), // For price-based filtering
+        @Index(name = "idx_product_quantity", columnList = "quantity"), // For stock filtering
+        @Index(name = "idx_product_sold_count", columnList = "sold_count"), // For bestseller sorting
+        @Index(name = "idx_product_created", columnList = "created_at") // For sorting by creation date
 })
 @Getter
 @Setter
 @NoArgsConstructor
-public class Product {
-
-    @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "BINARY(16)")
-    private UUID id;
+public class Product {    @Id
+    @UuidGenerator
+    @Column(name = "product_id", updatable = false, nullable = false, columnDefinition = "BINARY(16)")
+    private UUID productId;
 
     @NotBlank(message = "Product title cannot be blank")
     @Size(max = 255)
@@ -43,36 +43,40 @@ public class Product {
     @Column(nullable = false)
     private String author;
 
-    @Size(max = 20) // ISBN có thể có 10 hoặc 13 ký tự, có thể có dấu gạch nối
-    @Column(length = 20, unique = true) // ISBN nên là duy nhất (hoặc không?)
-    private String isbn;
+    @NotNull(message = "Original price cannot be null")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Original price must be positive")
+    @Digits(integer = 10, fraction = 2, message = "Original price format invalid")
+    @Column(name = "original_price", nullable = false, precision = 12, scale = 2)
+    private BigDecimal originalPrice;
 
-    @Lob // Đánh dấu là Large Object, có thể map tới kiểu TEXT hoặc CLOB trong DB
-    @Column(columnDefinition = "TEXT") // Chỉ định rõ kiểu cột trong DB nếu cần
-    private String description;
+    @NotNull(message = "Current price cannot be null")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Current price must be positive")
+    @Digits(integer = 10, fraction = 2, message = "Current price format invalid")
+    @Column(name = "current_price", nullable = false, precision = 12, scale = 2)
+    private BigDecimal currentPrice;
 
-    @NotNull(message = "Price cannot be null")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Price must be positive") // Giá phải lớn hơn 0
-    @Digits(integer = 10, fraction = 2, message = "Price format invalid") // Tối đa 10 chữ số phần nguyên, 2 chữ số phần thập phân
-    @Column(nullable = false, precision = 12, scale = 2) // precision = tổng số chữ số, scale = số chữ số sau dấu phẩy
-    private BigDecimal price;
-
-    @NotNull(message = "Stock quantity cannot be null")
-    @Min(value = 0, message = "Stock quantity cannot be negative") // Số lượng không được âm
+    @NotNull(message = "Quantity cannot be null")
+    @Min(value = 0, message = "Quantity cannot be negative")
     @Column(nullable = false)
-    private Integer stockQuantity = 0; // Giá trị mặc định
+    private Integer quantity = 0;
 
-    /**
-     * Track number of products sold
-     */
     @Column(name = "sold_count")
-    private Integer soldCount = 0; // Default value 0
-    
-    @Column(length = 500) // URL ảnh có thể dài
-    private String imageUrl;
+    private Integer soldCount = 0;
 
-    @Column(name = "published_date")
-    private LocalDate publishedDate;
+    @Min(value = 1, message = "Pages must be at least 1")
+    @Column
+    private Integer pages;
+
+    @Size(max = 200)
+    @Column(length = 200)
+    private String publisher;
+
+    @Column(name = "cover_link", length = 500)
+    private String coverLink;
+
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
     // Quan hệ Nhiều-Một với Category: Nhiều Product thuộc về một Category
     // fetch = FetchType.LAZY: Chỉ tải Category khi cần (tốt cho hiệu năng khi lấy danh sách Product)
@@ -102,14 +106,13 @@ public class Product {
     // Tự động cập nhật timestamp khi bản ghi được cập nhật
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
-
-    // --- Constructor (tùy chọn) ---
-    public Product(String title, String author, BigDecimal price, Integer stockQuantity, Category category) {
+    private Instant updatedAt;    // --- Constructor (tùy chọn) ---
+    public Product(String title, String author, BigDecimal originalPrice, BigDecimal currentPrice, Integer quantity, Category category) {
         this.title = title;
         this.author = author;
-        this.price = price;
-        this.stockQuantity = stockQuantity;
+        this.originalPrice = originalPrice;
+        this.currentPrice = currentPrice;
+        this.quantity = quantity;
         this.category = category;
     }
 

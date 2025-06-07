@@ -43,13 +43,11 @@ public class UserServiceImpl implements UserService {
                 address.getRecipientName()
             );
         }
-        
-        return new UserProfileDTO(
+          return new UserProfileDTO(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
                 user.getAvatarUrl(),
-                user.getDisplayName(),
                 user.getPhone(),
                 addressDTO
         );
@@ -123,16 +121,9 @@ public class UserServiceImpl implements UserService {
     public UserProfileDTO updateProfile(Long userId, UpdateProfileRequest request) {
          log.info("Attempting to update profile for user ID: {}", userId);
          User user = userRepository.findById(userId)
-                 .orElseThrow(() -> new ResourceNotFoundException("User", "ID", userId));
-
-         // Cập nhật tên
+                 .orElseThrow(() -> new ResourceNotFoundException("User", "ID", userId));         // Cập nhật tên
          if (request.getName() != null && !request.getName().isBlank()) {
               user.setName(request.getName());
-         }
-         
-         // Cập nhật tên hiển thị
-         if (request.getDisplayName() != null) {
-              user.setDisplayName(request.getDisplayName());
          }
          
          // Cập nhật số điện thoại

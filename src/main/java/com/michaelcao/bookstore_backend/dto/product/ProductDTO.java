@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,15 +16,17 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class ProductDTO {
-    private UUID id;
+    private UUID productId;
     private String title;
     private String author;
-    private String isbn;
+    private BigDecimal originalPrice;
+    private BigDecimal currentPrice;
+    private Integer quantity;
+    private Integer soldCount;
+    private Integer pages;
+    private String publisher;
+    private String coverLink;
     private String description;
-    private BigDecimal price;
-    private Integer stockQuantity;
-    private String imageUrl;
-    private LocalDate publishedDate;
     private Instant createdAt;
     private Instant updatedAt;
     private CategoryDTO category;
@@ -33,10 +34,6 @@ public class ProductDTO {
     
     @Builder.Default
     private Double averageRating = 0.0; // Điểm trung bình (mặc định là 0 nếu chưa có)
-    
-    @Builder.Default
+      @Builder.Default
     private Long reviewCount = 0L;     // Số lượng đánh giá (mặc định là 0)
-    
-    @Builder.Default
-    private Integer soldCount = 0;    // Số lượng sản phẩm đã bán
 }

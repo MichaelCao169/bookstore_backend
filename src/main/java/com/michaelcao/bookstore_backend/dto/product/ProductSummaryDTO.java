@@ -13,10 +13,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor // Thêm AllArgsConstructor để dễ tạo trong Service (nếu dùng projection)
 public class ProductSummaryDTO {
-    private UUID id;
+    private UUID productId;
     private String title;
     private String author;
-    private BigDecimal price;
-    private String imageUrl;
+    private BigDecimal currentPrice;
+    private String coverLink;
     private String categoryName; // Có thể thêm tên category nếu cần
 }

@@ -68,8 +68,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Transactional(readOnly = true)
     public List<ProductDTO> getTopSellingProducts(int limit) {
         log.debug("Fetching top {} selling products", limit);
-        
-        try {
+          try {
             // Get top products by sales count
             // This is a mock implementation - you'd typically query your database
             // to get products ordered by sales count
@@ -77,13 +76,13 @@ public class DashboardServiceImpl implements DashboardService {
                     .stream()
                     .limit(limit)
                     .map(product -> ProductDTO.builder()
-                            .id(product.getId())
+                            .productId(product.getProductId())
                             .title(product.getTitle())
                             .author(product.getAuthor())
                             .description(product.getDescription())
-                            .price(product.getPrice())
-                            .stockQuantity(product.getStockQuantity())
-                            .imageUrl(product.getImageUrl())
+                            .currentPrice(product.getCurrentPrice())
+                            .quantity(product.getQuantity())
+                            .coverLink(product.getCoverLink())
                             .soldCount(product.getSoldCount() != null ? product.getSoldCount() : 0)
                             .build())
                     .collect(Collectors.toList());

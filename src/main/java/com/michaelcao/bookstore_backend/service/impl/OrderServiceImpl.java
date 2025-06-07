@@ -87,10 +87,10 @@ public class OrderServiceImpl implements OrderService {
         }
         return new OrderItemDTO(
                 item.getId(),
-                item.getProduct().getId(),
+                item.getProduct().getProductId(),
                 item.getProduct().getTitle(),
                 item.getProduct().getAuthor(),
-                item.getProduct().getImageUrl(),
+                item.getProduct().getCoverLink(),
                 item.getQuantity(),
                 item.getPriceAtPurchase()
         );
@@ -140,15 +140,15 @@ public class OrderServiceImpl implements OrderService {
 
             // Kiểm tra lại product tồn tại (phòng trường hợp bị xóa sau khi thêm vào giỏ)
             if (product == null) {
-                throw new ResourceNotFoundException("Product with ID " + cartItem.getProduct().getId() + " in cart not found.");
+                throw new ResourceNotFoundException("Product with ID " + cartItem.getProduct().getProductId() + " in cart not found.");
             }
 
             // Kiểm tra lại tồn kho
-            if (product.getStockQuantity() < requestedQuantity) {
+            if (product.getQuantity() < requestedQuantity) {
                 log.warn("Order creation failed: Product ID {} ('{}') stock is insufficient ({} < {}).",
-                        product.getId(), product.getTitle(), product.getStockQuantity(), requestedQuantity);
+                        product.getProductId(), product.getTitle(), product.getQuantity(), requestedQuantity);
                 throw new OperationNotAllowedException("Insufficient stock for product: " + product.getTitle() +
-                        ". Available: " + product.getStockQuantity() +
+                        ". Available: " + product.getQuantity() +
                         ", Requested: " + requestedQuantity);
             }
 
@@ -157,18 +157,18 @@ public class OrderServiceImpl implements OrderService {
                     order, // Tham chiếu đến Order đang tạo
                     product,
                     requestedQuantity,
-                    product.getPrice() // Lấy giá hiện tại của sản phẩm làm giá tại thời điểm mua
+                    product.getCurrentPrice() // Lấy giá hiện tại của sản phẩm làm giá tại thời điểm mua
             );
             orderItems.add(orderItem);
 
             // Trừ kho sản phẩm
-            product.setStockQuantity(product.getStockQuantity() - requestedQuantity);
+            product.setQuantity(product.getQuantity() - requestedQuantity);
             // KHÔNG cần gọi productRepository.save() ở đây vì đang trong transaction,
             // Hibernate sẽ tự động phát hiện thay đổi và cập nhật khi transaction commit.
 
             // Tính tổng tiền
             calculatedTotalAmount = calculatedTotalAmount.add(
-                    product.getPrice().multiply(BigDecimal.valueOf(requestedQuantity))
+                    product.getCurrentPrice().multiply(BigDecimal.valueOf(requestedQuantity))
             );
         }
 
@@ -285,16 +285,16 @@ public class OrderServiceImpl implements OrderService {
         Set<OrderItem> orderItems = order.getOrderItems();
         if (orderItems != null && !orderItems.isEmpty()) {
             for (OrderItem item : orderItems) {
-                Product product = productRepository.findById(item.getProduct().getId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + item.getProduct().getId()));
+                Product product = productRepository.findById(item.getProduct().getProductId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + item.getProduct().getProductId()));
                 
                 // Tăng số lượng sản phẩm trong kho
-                int currentStock = product.getStockQuantity();
-                product.setStockQuantity(currentStock + item.getQuantity());
+                int currentStock = product.getQuantity();
+                product.setQuantity(currentStock + item.getQuantity());
                 
                 // Lưu thay đổi vào DB
                 productRepository.save(product);
-                log.info("Restored {} units to stock for product ID: {}", item.getQuantity(), product.getId());
+                log.info("Restored {} units to stock for product ID: {}", item.getQuantity(), product.getProductId());
             }
         }
         

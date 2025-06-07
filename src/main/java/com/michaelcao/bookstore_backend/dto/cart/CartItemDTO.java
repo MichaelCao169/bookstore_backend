@@ -1,7 +1,5 @@
 package com.michaelcao.bookstore_backend.dto.cart;
 
-// Import các DTO hoặc trường cần thiết từ Product
-import com.michaelcao.bookstore_backend.dto.product.ProductSummaryDTO; // Hoặc dùng ProductDTO nếu cần nhiều chi tiết hơn
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -22,23 +20,23 @@ public class CartItemDTO {
     private UUID productId;
     private String productTitle;
     private String productAuthor;
-    private BigDecimal productPrice; // Giá của 1 sản phẩm
-    private String productImageUrl;
-    private Integer productStockQuantity; // Hiển thị tồn kho để người dùng biết
+    private BigDecimal productCurrentPrice; // Giá hiện tại của 1 sản phẩm (currentPrice)
+    private String productCoverLink; // coverLink
+    private Integer productQuantity; // quantity
 
     // --- Thông tin tính toán (thường được tính ở Service) ---
     private BigDecimal subtotal; // Giá tiền cho món hàng này (price * quantity)
 
     // Constructor (tùy chọn, hữu ích khi mapping)
-    public CartItemDTO(Long cartItemId, Integer quantity, UUID productId, String productTitle, String productAuthor, BigDecimal productPrice, String productImageUrl, Integer productStockQuantity) {
+    public CartItemDTO(Long cartItemId, Integer quantity, UUID productId, String productTitle, String productAuthor, BigDecimal productCurrentPrice, String productCoverLink, Integer productQuantity) {
         this.cartItemId = cartItemId;
         this.quantity = quantity;
         this.productId = productId;
         this.productTitle = productTitle;
         this.productAuthor = productAuthor;
-        this.productPrice = productPrice;
-        this.productImageUrl = productImageUrl;
-        this.productStockQuantity = productStockQuantity;
+        this.productCurrentPrice = productCurrentPrice;
+        this.productCoverLink = productCoverLink;
+        this.productQuantity = productQuantity;
         // Subtotal sẽ được tính và set sau trong Service
     }
 }

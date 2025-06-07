@@ -152,5 +152,16 @@ public class ProductController {
         return ResponseEntity.ok(topProducts);
     }
 
+    /**
+     * Get all unique authors from products
+     * @return List of unique author names
+     */
+    @GetMapping("/authors")
+    public ResponseEntity<List<String>> getAllAuthors() {
+        log.debug("Request received to get all authors");
+        List<String> authors = productService.getAllAuthors();
+        return ResponseEntity.ok(authors);
+    }
+
     // --- Optional Endpoints ---
 }

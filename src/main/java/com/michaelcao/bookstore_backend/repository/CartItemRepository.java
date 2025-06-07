@@ -23,15 +23,13 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> { // E
      * @param product Đối tượng Product.
      * @return Optional chứa CartItem nếu tìm thấy.
      */
-    Optional<CartItem> findByCartAndProduct(Cart cart, Product product);
-
-    /**
+    Optional<CartItem> findByCartAndProduct(Cart cart, Product product);    /**
      * Tìm một CartItem cụ thể dựa vào Cart ID và Product ID.
      * @param cartId ID của Cart.
      * @param productId ID của Product.
      * @return Optional chứa CartItem nếu tìm thấy.
      */
-    Optional<CartItem> findByCartIdAndProductId(Long cartId, UUID productId);
+    Optional<CartItem> findByCartIdAndProductProductId(Long cartId, UUID productId);
 
     /**
      * Tìm tất cả các CartItem thuộc về một Cart.

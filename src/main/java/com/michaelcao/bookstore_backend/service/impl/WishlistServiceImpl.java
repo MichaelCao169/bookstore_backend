@@ -29,11 +29,11 @@ public class WishlistServiceImpl implements WishlistService {
     // Helper method: Map Product sang ProductSummaryDTO
     private ProductSummaryDTO mapToProductSummaryDTO(Product product) {
         return new ProductSummaryDTO(
-                product.getId(),
+                product.getProductId(),
                 product.getTitle(),
                 product.getAuthor(),
-                product.getPrice(),
-                product.getImageUrl(),
+                product.getCurrentPrice(),
+                product.getCoverLink(),
                 (product.getCategory() != null) ? product.getCategory().getName() : null // Lấy tên Category nếu có
         );
     }
@@ -70,7 +70,7 @@ public class WishlistServiceImpl implements WishlistService {
         // if (user.getWishlistItems().contains(product)) { // Cách này có thể gây load cả collection
         // Tối ưu hơn: Kiểm tra qua query Repository nếu collection lớn
         // Hoặc kiểm tra trực tiếp trên Set nếu đã load (cẩn thận lazy loading)
-        boolean alreadyExists = user.getWishlistItems().stream().anyMatch(p -> p.getId().equals(productId));
+        boolean alreadyExists = user.getWishlistItems().stream().anyMatch(p -> p.getProductId().equals(productId));
         if (alreadyExists) {
             log.warn("Product ID {} already exists in wishlist for user ID {}", productId, userId);
             throw new DuplicateResourceException("Product is already in your wishlist.");
@@ -93,7 +93,7 @@ public class WishlistServiceImpl implements WishlistService {
 
         // Tìm sản phẩm cần xóa trong wishlist của user
         Product productToRemove = user.getWishlistItems().stream()
-                .filter(p -> p.getId().equals(productId))
+                .filter(p -> p.getProductId().equals(productId))
                 .findFirst()
                 .orElseThrow(() -> {
                     log.warn("Product ID {} not found in wishlist for user ID {}", productId, userId);

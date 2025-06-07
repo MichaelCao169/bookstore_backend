@@ -10,7 +10,6 @@ import com.michaelcao.bookstore_backend.entity.Product;
 import com.michaelcao.bookstore_backend.entity.User;
 import com.michaelcao.bookstore_backend.exception.OperationNotAllowedException;
 import com.michaelcao.bookstore_backend.exception.ResourceNotFoundException;
-import com.michaelcao.bookstore_backend.repository.CartItemRepository;
 import com.michaelcao.bookstore_backend.repository.CartRepository;
 import com.michaelcao.bookstore_backend.repository.ProductRepository;
 import com.michaelcao.bookstore_backend.repository.UserRepository;
@@ -25,20 +24,15 @@ import java.util.Optional;
 
 @Service
 @Slf4j
-public class CartServiceImpl implements CartService {
-
-    private final CartRepository cartRepository;
-    private final CartItemRepository cartItemRepository;
+public class CartServiceImpl implements CartService {    private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
     @Autowired
     public CartServiceImpl(CartRepository cartRepository, 
-                         CartItemRepository cartItemRepository,
                          ProductRepository productRepository,
                          UserRepository userRepository) {
         this.cartRepository = cartRepository;
-        this.cartItemRepository = cartItemRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
     }
@@ -60,23 +54,21 @@ public class CartServiceImpl implements CartService {
     private CartDTO mapCartToCartDTO(Cart cart) {
         CartDTO cartDTO = new CartDTO(cart.getId());
         BigDecimal totalPrice = BigDecimal.ZERO;
-        int totalItemsCount = 0;
-
-        if (cart.getCartItems() != null) {
+        int totalItemsCount = 0;        if (cart.getCartItems() != null) {
             for (CartItem item : cart.getCartItems()) {
                 if (item.getProduct() != null) { // Kiểm tra product có tồn tại không
                     CartItemDTO itemDTO = new CartItemDTO(
                             item.getId(),
                             item.getQuantity(),
-                            item.getProduct().getId(),
+                            item.getProduct().getProductId(),
                             item.getProduct().getTitle(),
                             item.getProduct().getAuthor(),
-                            item.getProduct().getPrice(),
-                            item.getProduct().getImageUrl(),
-                            item.getProduct().getStockQuantity()
+                            item.getProduct().getCurrentPrice(),
+                            item.getProduct().getCoverLink(),
+                            item.getProduct().getQuantity()
                     );
                     // Tính subtotal cho item này
-                    BigDecimal itemSubtotal = item.getProduct().getPrice()
+                    BigDecimal itemSubtotal = item.getProduct().getCurrentPrice()
                             .multiply(BigDecimal.valueOf(item.getQuantity()));
                     itemDTO.setSubtotal(itemSubtotal);
                     cartDTO.getItems().add(itemDTO);
@@ -103,56 +95,74 @@ public class CartServiceImpl implements CartService {
         log.debug("Fetching cart for user ID: {}", userId);
         Cart cart = getOrCreateCart(userId);
         return mapCartToCartDTO(cart);
-    }
-
-    @Override
+    }    @Override
     @Transactional // Thao tác ghi vào DB
     public CartDTO addProductToCart(Long userId, AddToCartRequest request) {
-        log.debug("Adding product ID {} with quantity {} to cart for user ID {}",
-                request.getProductId(), request.getQuantity(), userId);
+        log.info("=== Starting addProductToCart for user ID: {}, product ID: {}, quantity: {} ===",
+                userId, request.getProductId(), request.getQuantity());
 
         Cart cart = getOrCreateCart(userId);
+        log.info("Cart retrieved/created with ID: {}, current items count: {}", cart.getId(), cart.getCartItems().size());
+        
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "ID", request.getProductId()));
-
+        log.info("Product found: {} (stock: {})", product.getTitle(), product.getQuantity());        log.info("Product found: {} (stock: {})", product.getTitle(), product.getQuantity());
+        
         // Kiểm tra số lượng tồn kho
-        if (product.getStockQuantity() < request.getQuantity()) {
+        if (product.getQuantity() < request.getQuantity()) {
             log.warn("Cannot add product ID {}: Requested quantity {} exceeds stock {}",
-                    product.getId(), request.getQuantity(), product.getStockQuantity());
+                    product.getProductId(), request.getQuantity(), product.getQuantity());
             throw new OperationNotAllowedException("Requested quantity exceeds available stock for product: " + product.getTitle());
         }
 
         // Tìm xem sản phẩm đã có trong giỏ chưa
         Optional<CartItem> existingItemOptional = cart.getCartItems().stream()
-                .filter(item -> item.getProduct().getId().equals(request.getProductId()))
-                .findFirst();
-
-        if (existingItemOptional.isPresent()) {
+                .filter(item -> item.getProduct().getProductId().equals(request.getProductId()))
+                .findFirst();        log.info("Existing cart item found: {}", existingItemOptional.isPresent());        if (existingItemOptional.isPresent()) {
+            log.info("BRANCH: Updating existing cart item");
             // Nếu đã có -> cộng dồn số lượng
             CartItem existingItem = existingItemOptional.get();
             int newQuantity = existingItem.getQuantity() + request.getQuantity();
 
             // Kiểm tra lại tồn kho với số lượng mới
-            if (product.getStockQuantity() < newQuantity) {
+            if (product.getQuantity() < newQuantity) {
                 log.warn("Cannot add product ID {}: New total quantity {} exceeds stock {}",
-                        product.getId(), newQuantity, product.getStockQuantity());
+                        product.getProductId(), newQuantity, product.getQuantity());
                 throw new OperationNotAllowedException("Adding requested quantity exceeds available stock for product: " + product.getTitle());
-            }
-            existingItem.setQuantity(newQuantity);
-            log.info("Updated quantity for product ID {} in cart ID {}", product.getId(), cart.getId());
+            }            existingItem.setQuantity(newQuantity);
+            log.info("Updated quantity for product ID {} in cart ID {}", product.getProductId(), cart.getId());
             // Không cần gọi save CartItem vì cascade=ALL và orphanRemoval=true trên Cart
         } else {
+            log.info("BRANCH: Creating new cart item");
             // Nếu chưa có -> tạo CartItem mới
             CartItem newItem = new CartItem(cart, product, request.getQuantity());
+            log.info("Creating new CartItem: cart={}, product={}, quantity={}", cart.getId(), product.getProductId(), request.getQuantity());
             cart.addCartItem(newItem); // Thêm vào Set và tự động set quan hệ hai chiều
-            log.info("Added new product ID {} to cart ID {}", product.getId(), cart.getId());
+            log.info("Added new product ID {} to cart ID {}. Cart items size after add: {}", 
+                    product.getProductId(), cart.getId(), cart.getCartItems().size());
             // Không cần gọi save CartItem vì cascade=ALL
         }
 
         // Lưu lại Cart (sẽ tự động cascade đến CartItem nhờ CascadeType.ALL)
-        Cart updatedCart = cartRepository.save(cart);
+        log.info("About to save cart. Current cart items size: {}", cart.getCartItems().size());
+        try {
+            Cart savedCart = cartRepository.save(cart);
+            log.info("Cart saved successfully. Items count after save: {}", savedCart.getCartItems().size());
+            
+            // Debug: kiểm tra từng CartItem
+            savedCart.getCartItems().forEach(item -> {
+                log.info("CartItem in saved cart: ID={}, Product={}, Quantity={}", 
+                        item.getId(), item.getProduct().getProductId(), item.getQuantity());
+            });
+        } catch (Exception e) {
+            log.error("Error saving cart: ", e);
+            throw e;
+        }
+        
         // Tải lại với JOIN FETCH để lấy DTO chính xác
-        return getCartByUserId(userId); // Gọi lại hàm này để đảm bảo DTO được tính toán đúng
+        CartDTO result = getCartByUserId(userId); // Gọi lại hàm này để đảm bảo DTO được tính toán đúng
+        log.info("=== Finished addProductToCart. Final cart items count: {} ===", result.getItems().size());
+        return result;
     }
 
     @Override
@@ -177,12 +187,10 @@ public class CartServiceImpl implements CartService {
             cart.removeCartItem(cartItem);
             cartRepository.save(cart);
             throw new ResourceNotFoundException("Product associated with this cart item no longer exists.");
-        }
-
-        // Kiểm tra số lượng tồn kho
-        if (product.getStockQuantity() < request.getQuantity()) {
+        }        // Kiểm tra số lượng tồn kho
+        if (product.getQuantity() < request.getQuantity()) {
             log.warn("Cannot update cart item ID {}: Requested quantity {} exceeds stock {}",
-                    cartItemId, request.getQuantity(), product.getStockQuantity());
+                    cartItemId, request.getQuantity(), product.getQuantity());
             throw new OperationNotAllowedException("Requested quantity exceeds available stock for product: " + product.getTitle());
         }
 

@@ -4,12 +4,10 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 
 @Data
 public class UpdateProductRequest {
-    // Validation tương tự CreateProductRequest
     @NotBlank(message = "Product title cannot be blank")
     @Size(max = 255)
     private String title;
@@ -18,24 +16,30 @@ public class UpdateProductRequest {
     @Size(max = 150)
     private String author;
 
-    @Size(max = 20, message = "ISBN cannot exceed 20 characters")
-    private String isbn;
-
-    private String description;
-
-    @NotNull(message = "Price cannot be null")
+    @NotNull(message = "Original price cannot be null")
     @DecimalMin(value = "0.0", inclusive = false)
     @Digits(integer = 10, fraction = 2)
-    private BigDecimal price;
+    private BigDecimal originalPrice;
 
-    @NotNull(message = "Stock quantity cannot be null")
+    @NotNull(message = "Current price cannot be null")
+    @DecimalMin(value = "0.0", inclusive = false)
+    @Digits(integer = 10, fraction = 2)
+    private BigDecimal currentPrice;
+
+    @NotNull(message = "Quantity cannot be null")
     @Min(value = 0)
-    private Integer stockQuantity;
+    private Integer quantity;
+
+    @Min(value = 1, message = "Pages must be at least 1")
+    private Integer pages;
+
+    @Size(max = 200)
+    private String publisher;
 
     @Size(max = 500)
-    private String imageUrl;
+    private String coverLink;
 
-    private LocalDate publishedDate;
+    private String description;
 
     @NotNull(message = "Category ID cannot be null")
     @Min(value = 1)

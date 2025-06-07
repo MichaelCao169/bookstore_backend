@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query; // Import Query
 import org.springframework.data.repository.query.Param; // Import Param
 import org.springframework.stereotype.Repository;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,8 +21,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> { // Entit
      * @param pageable Thông tin phân trang.
      * @return Page chứa danh sách Review với User đã được tải.
      */
-    @Query(value = "SELECT r FROM Review r LEFT JOIN FETCH r.user u WHERE r.product.id = :productId",
-            countQuery = "SELECT count(r) FROM Review r WHERE r.product.id = :productId")
+    @Query(value = "SELECT r FROM Review r LEFT JOIN FETCH r.user u WHERE r.product.productId = :productId",
+            countQuery = "SELECT count(r) FROM Review r WHERE r.product.productId = :productId")
     Page<Review> findByProductIdWithUser(@Param("productId") UUID productId, Pageable pageable);
 
     /**
@@ -32,7 +31,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> { // Entit
      * @param productId ID của Product.
      * @return true nếu đã tồn tại đánh giá, false nếu chưa.
      */
-    boolean existsByUserIdAndProductId(Long userId, UUID productId);
+    boolean existsByUserIdAndProductProductId(Long userId, UUID productId);
 
     /**
      * Tìm đánh giá cụ thể của một User cho một Product.
@@ -40,7 +39,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> { // Entit
      * @param productId ID của Product.
      * @return Optional chứa Review nếu tìm thấy.
      */
-    Optional<Review> findByUserIdAndProductId(Long userId, UUID productId);
+    Optional<Review> findByUserIdAndProductProductId(Long userId, UUID productId);
 
     /**
      * Tính rating trung bình cho một sản phẩm.
@@ -48,7 +47,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> { // Entit
      * @param productId ID của Product.
      * @return Giá trị trung bình kiểu Double, hoặc null.
      */
-    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.product.id = :productId")
+    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.product.productId = :productId")
     Double findAverageRatingByProductId(@Param("productId") UUID productId);
 
     /**
@@ -59,7 +58,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> { // Entit
     // Spring Data có thể tự tạo query này từ tên, hoặc dùng @Query cho chắc chắn
     // long countByProductId(Long productId);
     // Hoặc:
-    @Query("SELECT COUNT(r.id) FROM Review r WHERE r.product.id = :productId")
+    @Query("SELECT COUNT(r.id) FROM Review r WHERE r.product.productId = :productId")
     long countByProductId(@Param("productId") UUID productId);
 
 
@@ -70,9 +69,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> { // Entit
      * @param productIds Danh sách các ID của Product.
      * @return List chứa kết quả tổng hợp.
      */
-    @Query("SELECT r.product.id as productId, AVG(r.rating) as averageRating, COUNT(r.id) as reviewCount " +
-            "FROM Review r WHERE r.product.id IN :productIds " +
-            "GROUP BY r.product.id")
+    @Query("SELECT r.product.productId as productId, AVG(r.rating) as averageRating, COUNT(r.id) as reviewCount " +
+            "FROM Review r WHERE r.product.productId IN :productIds " +
+            "GROUP BY r.product.productId")
     List<Object[]> findReviewStatsByProductIds(@Param("productIds") List<UUID> productIds);
 
     // --- Interface để map kết quả từ query findReviewStatsByProductIds (Cách khác thay vì Object[]) ---
@@ -82,9 +81,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> { // Entit
         Long getReviewCount();
     }
 
-    @Query("SELECT r.product.id as productId, AVG(r.rating) as averageRating, COUNT(r.id) as reviewCount " +
-            "FROM Review r WHERE r.product.id IN :productIds " +
-            "GROUP BY r.product.id")
+    @Query("SELECT r.product.productId as productId, AVG(r.rating) as averageRating, COUNT(r.id) as reviewCount " +
+            "FROM Review r WHERE r.product.productId IN :productIds " +
+            "GROUP BY r.product.productId")
     List<ReviewStats> findReviewStatsByProductIdsProjection(@Param("productIds") List<UUID> productIds);
 
 }

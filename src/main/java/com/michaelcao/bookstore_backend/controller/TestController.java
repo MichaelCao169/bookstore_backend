@@ -111,7 +111,7 @@ public class TestController {
             product.put("id", "mock-product-" + (i+1));
             product.put("title", "Sách mẫu " + (i+1));
             product.put("price", 100000 + (i * 20000));
-            product.put("imageUrl", "/product-placeholder.jpg");
+            product.put("coverLink", "/product-placeholder.jpg");
             product.put("stock", 10 + i);
             product.put("createdAt", LocalDateTime.now().minusDays(i).format(DateTimeFormatter.ISO_DATE_TIME));
             products.add(product);

@@ -11,8 +11,6 @@ public class UpdateProfileRequest {
     @Size(min = 2, max = 50, message = "Name must be between 2 and 50 characters")
     private String name;
     
-    // Thêm các trường mới
-    private String displayName; // Tên hiển thị
     private String phone; // Số điện thoại
     
     // Địa chỉ mặc định

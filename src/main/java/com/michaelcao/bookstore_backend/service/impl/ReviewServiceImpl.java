@@ -64,10 +64,8 @@ public class ReviewServiceImpl implements ReviewService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "ID", userId));
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "ID", productId));
-
-        // 2. Kiểm tra xem user đã đánh giá sản phẩm này chưa
-        if (reviewRepository.existsByUserIdAndProductId(userId, productId)) {
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "ID", productId));        // 2. Kiểm tra xem user đã đánh giá sản phẩm này chưa
+        if (reviewRepository.existsByUserIdAndProductProductId(userId, productId)) {
             log.warn("User ID {} already reviewed product ID {}", userId, productId);
             throw new DuplicateResourceException("You have already reviewed this product.");
         }

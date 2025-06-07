@@ -21,9 +21,6 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
      */
     List<Product> findAllByOrderBySoldCountDesc();
 
-    // Tìm sản phẩm theo ISBN (duy nhất)
-    Optional<Product> findByIsbn(String isbn);
-
     // Tìm tất cả sản phẩm thuộc về một Category cụ thể (có phân trang)
     // Sử dụng ID của Category để tìm kiếm
     Page<Product> findByCategoryId(Long categoryId, Pageable pageable);
@@ -42,9 +39,6 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     @Query("SELECT p FROM Product p WHERE LOWER(p.title) LIKE LOWER(concat('%', :keyword, '%')) OR LOWER(p.author) LIKE LOWER(concat('%', :keyword, '%'))")
     Page<Product> searchByTitleOrAuthor(@Param("keyword") String keyword, Pageable pageable);
 
-    // Kiểm tra sự tồn tại của sản phẩm theo ISBN
-    boolean existsByIsbn(String isbn);
-
     // Đếm số lượng sản phẩm theo category ID (dùng để kiểm tra trước khi xóa Category)
     @Query("SELECT COUNT(p) FROM Product p WHERE p.category.id = :categoryId")
     long countByCategoryId(@Param("categoryId") Long categoryId);
@@ -56,6 +50,35 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     // Tìm sản phẩm theo từ khóa trong tiêu đề hoặc tác giả
     @Query("SELECT p FROM Product p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.author) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Product> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    // *** OPTIMIZED QUERIES FOR PERFORMANCE ***
+    
+    /**
+     * Find product by ID with eagerly fetched category and categories relationships
+     * This prevents N+1 query issues by loading all related data in a single query
+     */
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.category " +
+           "LEFT JOIN FETCH p.categories " +
+           "WHERE p.productId = :productId")
+    Optional<Product> findByProductIdWithCategoriesFetched(@Param("productId") UUID productId);
+
+    /**
+     * Find all products with eagerly fetched categories for pagination
+     * This prevents N+1 query issues when loading product lists
+     */
+    @Query(value = "SELECT DISTINCT p FROM Product p " +
+                   "LEFT JOIN FETCH p.category " +
+                   "LEFT JOIN FETCH p.categories",
+           countQuery = "SELECT COUNT(p) FROM Product p")
+    Page<Product> findAllWithCategoriesFetched(Pageable pageable);
+
+    /**
+     * Get all unique authors from products
+     * @return List of unique author names ordered alphabetically
+     */
+    @Query("SELECT DISTINCT p.author FROM Product p WHERE p.author IS NOT NULL AND p.author <> '' ORDER BY p.author")
+    List<String> findAllUniqueAuthors();
 
     // Bạn có thể thêm nhiều phương thức truy vấn khác dựa trên nhu cầu
 }
