@@ -24,7 +24,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final AuthenticationProvider authenticationProvider;    // Public endpoints that don't require authentication
+    private final AuthenticationProvider authenticationProvider;
     private static final String[] PUBLIC_MATCHERS = {
             "/api/auth/**",
             "/api/verify-email/**",
@@ -59,6 +59,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/cart/**").hasRole("CUSTOMER")
                 .requestMatchers("/api/orders/**").hasRole("CUSTOMER")
                 .requestMatchers("/api/wishlist/**").hasRole("CUSTOMER")
+                    .requestMatchers("/api/ai-chat/**").authenticated()
                   // Admin-specific endpoints
                 .requestMatchers("/api/products/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
