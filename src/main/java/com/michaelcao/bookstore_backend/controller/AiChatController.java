@@ -7,10 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/ai-chat")
@@ -22,8 +19,15 @@ public class AiChatController {
 
     @PostMapping("/send")
     public ResponseEntity<AiChatResponse> getAiResponse(@Valid @RequestBody AiChatRequest request) {
-        log.info("Received AI chat request: '{}'", request.getMessage());
-        String reply = aiChatService.getAiResponse(request.getMessage());
-        return ResponseEntity.ok(new AiChatResponse(reply));
+        log.info("AI Chat: Received chat request");
+        
+        try {
+            String reply = aiChatService.getAiResponse(request.getMessage());
+            log.info("AI Chat: Successfully processed request");
+            return ResponseEntity.ok(new AiChatResponse(reply));
+        } catch (Exception e) {
+            log.error("AI Chat: Error processing request", e);
+            return ResponseEntity.ok(new AiChatResponse("Xin lỗi, tôi đang gặp một sự cố kỹ thuật. Vui lòng thử lại sau."));
+        }
     }
 }
