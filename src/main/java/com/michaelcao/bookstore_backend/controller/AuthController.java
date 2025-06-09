@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,12 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    
+    @Value("${app.jwt.refresh-cookie-name:bookstore_refresh_token}")
+    private String refreshTokenCookieName;
+    
+    @Value("${jwt.refresh-token-expiration-ms}")
+    private Long refreshTokenExpirationMs;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -43,12 +50,15 @@ public class AuthController {
         
         // Set refresh token as HttpOnly cookie if login successful
         if (authResponse.getRefreshToken() != null) {
-            Cookie refreshTokenCookie = new Cookie("bookstore_refresh_token", authResponse.getRefreshToken());
+            Cookie refreshTokenCookie = new Cookie(refreshTokenCookieName, authResponse.getRefreshToken());
             refreshTokenCookie.setHttpOnly(true);
             refreshTokenCookie.setSecure(false); // Set to true in production with HTTPS
             refreshTokenCookie.setPath("/");
-            refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
+            refreshTokenCookie.setMaxAge((int) (refreshTokenExpirationMs / 1000)); // Convert ms to seconds
             response.addCookie(refreshTokenCookie);
+            
+            log.info("Set refresh token cookie: name='{}', path='/', maxAge={}, httpOnly=true", 
+                refreshTokenCookieName, refreshTokenCookie.getMaxAge());
             
             // Remove refresh token from response body for security
             authResponse.setRefreshToken(null);
@@ -61,7 +71,7 @@ public class AuthController {
         authService.logout();
         
         // Clear refresh token cookie
-        Cookie refreshTokenCookie = new Cookie("bookstore_refresh_token", null);
+        Cookie refreshTokenCookie = new Cookie(refreshTokenCookieName, null);
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setSecure(false); // Set to true in production with HTTPS
         refreshTokenCookie.setPath("/");

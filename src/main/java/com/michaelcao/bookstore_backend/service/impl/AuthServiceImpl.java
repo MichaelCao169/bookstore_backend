@@ -186,6 +186,7 @@ public class AuthServiceImpl implements AuthService {
         
         log.info("Email verified successfully for user: {}", user.getEmail());
     }    @Override
+    @Transactional(readOnly = true)
     public AuthResponse refreshToken(HttpServletRequest request) {
         String refreshToken = getRefreshTokenFromCookies(request);
         
@@ -217,12 +218,22 @@ public class AuthServiceImpl implements AuthService {
                 })
                 .orElseThrow(() -> new TokenRefreshException("Refresh token is not valid"));
     }    private String getRefreshTokenFromCookies(HttpServletRequest request) {
+        log.debug("Looking for refresh token cookie with name: {}", refreshTokenCookieName);
         if (request.getCookies() != null) {
+            log.debug("Found {} cookies in request", request.getCookies().length);
             for (Cookie cookie : request.getCookies()) {
+                log.debug("Cookie: name='{}', value='{}', path='{}'", 
+                    cookie.getName(), 
+                    cookie.getValue() != null ? cookie.getValue().substring(0, Math.min(10, cookie.getValue().length())) + "..." : "null",
+                    cookie.getPath());
                 if (refreshTokenCookieName.equals(cookie.getName())) {
+                    log.debug("Found matching refresh token cookie");
                     return cookie.getValue();
                 }
             }
+            log.debug("No matching refresh token cookie found");
+        } else {
+            log.debug("No cookies found in request");
         }
         return null;
     }

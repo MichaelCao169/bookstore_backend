@@ -32,20 +32,20 @@ public interface ReviewService {
     Page<ReviewDTO> getReviewsByProductId(UUID productId, Pageable pageable);
 
     /**
-     * (Tùy chọn) Xóa một đánh giá (có thể cho Admin hoặc chính người dùng xóa).
+     * Xóa một đánh giá (chỉ cho phép người dùng xóa đánh giá của chính họ).
      * @param reviewId ID của đánh giá cần xóa.
      * @param userId ID của người dùng yêu cầu xóa (để kiểm tra quyền).
      * @throws com.michaelcao.bookstore_backend.exception.ResourceNotFoundException Nếu reviewId không tồn tại.
      * @throws com.michaelcao.bookstore_backend.exception.OperationNotAllowedException Nếu người dùng không có quyền xóa đánh giá này.
      */
-    // void deleteReview(Long reviewId, Long userId);
+    void deleteReview(Long reviewId, Long userId);
 
     /**
-     * (Tùy chọn) Cập nhật một đánh giá (chỉ cho phép người dùng cập nhật đánh giá của chính họ).
+     * Cập nhật một đánh giá (chỉ cho phép người dùng cập nhật đánh giá của chính họ).
      * @param reviewId ID của đánh giá cần cập nhật.
      * @param userId ID của người dùng yêu cầu cập nhật.
      * @param request DTO chứa thông tin cập nhật.
      * @return ReviewDTO sau khi cập nhật.
      */
-    // ReviewDTO updateReview(Long reviewId, Long userId, UpdateReviewRequest request); // Cần tạo UpdateReviewRequest
+    ReviewDTO updateReview(Long reviewId, Long userId, CreateReviewRequest request);
 }

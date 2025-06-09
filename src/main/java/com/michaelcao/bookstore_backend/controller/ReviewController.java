@@ -55,4 +55,35 @@ public class ReviewController {
         Page<ReviewDTO> reviewPage = reviewService.getReviewsByProductId(productId, pageable);
         return ResponseEntity.ok(reviewPage);
     }
+
+    /**
+     * Endpoint để cập nhật review.
+     * Yêu cầu người dùng đã đăng nhập và chỉ có thể cập nhật review của chính mình.
+     */
+    @PutMapping("/{reviewId}")
+    public ResponseEntity<ReviewDTO> updateReview(
+            @PathVariable UUID productId,
+            @PathVariable Long reviewId,
+            @Valid @RequestBody CreateReviewRequest request,
+            @AuthenticationPrincipal User currentUser) {
+        
+        log.info("Update review request for review ID {} by user ID {}", reviewId, currentUser.getId());
+        ReviewDTO reviewDTO = reviewService.updateReview(reviewId, currentUser.getId(), request);
+        return ResponseEntity.ok(reviewDTO);
+    }
+
+    /**
+     * Endpoint để xóa review.
+     * Yêu cầu người dùng đã đăng nhập và chỉ có thể xóa review của chính mình.
+     */
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<Void> deleteReview(
+            @PathVariable UUID productId,
+            @PathVariable Long reviewId,
+            @AuthenticationPrincipal User currentUser) {
+        
+        log.info("Delete review request for review ID {} by user ID {}", reviewId, currentUser.getId());
+        reviewService.deleteReview(reviewId, currentUser.getId());
+        return ResponseEntity.noContent().build();
+    }
 } 

@@ -111,5 +111,50 @@ public class ReviewServiceImpl implements ReviewService {
         return reviewPage.map(this::mapToReviewDTO);
     }
 
-    // --- Implement deleteReview và updateReview nếu cần ---
+    @Override
+    @Transactional
+    public void deleteReview(Long reviewId, Long userId) {
+        log.info("Attempting to delete review ID {} by user ID {}", reviewId, userId);
+
+        // 1. Tìm review theo ID
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Review", "ID", reviewId));
+
+        // 2. Kiểm tra quyền - chỉ người tạo review mới có thể xóa
+        if (!review.getUser().getId().equals(userId)) {
+            log.warn("User ID {} attempted to delete review ID {} without permission", userId, reviewId);
+            throw new OperationNotAllowedException("You can only delete your own reviews.");
+        }
+
+        // 3. Xóa review
+        reviewRepository.delete(review);
+        log.info("Review ID {} deleted successfully by user ID {}", reviewId, userId);
+    }
+
+    @Override
+    @Transactional
+    public ReviewDTO updateReview(Long reviewId, Long userId, CreateReviewRequest request) {
+        log.info("Attempting to update review ID {} by user ID {}", reviewId, userId);
+
+        // 1. Tìm review theo ID
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Review", "ID", reviewId));
+
+        // 2. Kiểm tra quyền - chỉ người tạo review mới có thể cập nhật
+        if (!review.getUser().getId().equals(userId)) {
+            log.warn("User ID {} attempted to update review ID {} without permission", userId, reviewId);
+            throw new OperationNotAllowedException("You can only update your own reviews.");
+        }
+
+        // 3. Cập nhật thông tin
+        review.setRating(request.getRating());
+        review.setComment(request.getComment());
+
+        // 4. Lưu thay đổi
+        Review updatedReview = reviewRepository.save(review);
+        log.info("Review ID {} updated successfully by user ID {}", reviewId, userId);
+
+        // 5. Map và trả về DTO
+        return mapToReviewDTO(updatedReview);
+    }
 }
