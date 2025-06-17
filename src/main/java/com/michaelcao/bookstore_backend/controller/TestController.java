@@ -125,4 +125,32 @@ public class TestController {
         
         return ResponseEntity.ok(response);
     }
+
+    // DEVELOPMENT ONLY - Test soldCount functionality
+    @GetMapping("/dev/test-sold-count")
+    public ResponseEntity<?> testSoldCount() {
+        // Only allow in development mode
+        if (!isDevelopment()) {
+            return ResponseEntity.status(403).body("This endpoint is only available in development mode");
+        }
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "SoldCount functionality test");
+        response.put("instructions", Arrays.asList(
+            "1. Create some products via admin panel",
+            "2. Create some orders with those products",
+            "3. Change order status to DELIVERED via admin panel",
+            "4. Check if soldCount is updated automatically",
+            "5. Use /api/admin/dashboard/recalculate-sold-count to recalculate all soldCount values",
+            "6. Check /api/products/top-selling to see top selling products",
+            "7. Check admin dashboard to see top selling products displayed"
+        ));
+        response.put("endpoints", Arrays.asList(
+            "GET /api/products/top-selling - Get top selling products",
+            "GET /api/admin/dashboard/top-products - Get top selling products (admin)",
+            "POST /api/admin/dashboard/recalculate-sold-count - Recalculate soldCount for all products"
+        ));
+        
+        return ResponseEntity.ok(response);
+    }
 }

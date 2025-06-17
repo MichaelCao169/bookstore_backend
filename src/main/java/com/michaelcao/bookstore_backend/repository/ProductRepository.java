@@ -80,5 +80,40 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     @Query("SELECT DISTINCT p.author FROM Product p WHERE p.author IS NOT NULL AND p.author <> '' ORDER BY p.author")
     List<String> findAllUniqueAuthors();
 
+    // *** AI CHATBOT OPTIMIZED QUERIES - PREVENT LAZY INITIALIZATION ***
+    
+    /**
+     * Search products by title or author with eagerly fetched category for AI chatbot
+     * This prevents LazyInitializationException when accessing category information
+     */
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.category " +
+           "WHERE LOWER(p.title) LIKE LOWER(concat('%', :keyword, '%')) OR LOWER(p.author) LIKE LOWER(concat('%', :keyword, '%'))")
+    Page<Product> searchByTitleOrAuthorWithCategory(@Param("keyword") String keyword, Pageable pageable);
+    
+    /**
+     * Find products by title containing keyword with eagerly fetched category
+     */
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.category " +
+           "WHERE LOWER(p.title) LIKE LOWER(concat('%', :keyword, '%'))")
+    Page<Product> findByTitleContainingIgnoreCaseWithCategory(@Param("keyword") String keyword, Pageable pageable);
+    
+    /**
+     * Find products by author containing keyword with eagerly fetched category
+     */
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.category " +
+           "WHERE LOWER(p.author) LIKE LOWER(concat('%', :keyword, '%'))")
+    Page<Product> findByAuthorContainingIgnoreCaseWithCategory(@Param("keyword") String keyword, Pageable pageable);
+    
+    /**
+     * Find all products ordered by sold count with eagerly fetched category
+     */
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.category " +
+           "ORDER BY p.soldCount DESC")
+    List<Product> findAllByOrderBySoldCountDescWithCategory();
+
     // Bạn có thể thêm nhiều phương thức truy vấn khác dựa trên nhu cầu
 }

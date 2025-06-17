@@ -4,6 +4,7 @@ package com.michaelcao.bookstore_backend.entity; // Hoặc com.michaelcao.bookst
 public enum OrderStatus {
     PENDING,          // Mới tạo, chờ xử lý (COD) hoặc chờ thanh toán (Online)
     PENDING_PAYMENT,  // Chờ thanh toán (Online)
+    PAID,             // Đã thanh toán thành công (Online)
     PROCESSING,       // Đã xác nhận/thanh toán, đang chuẩn bị hàng
     SHIPPED,          // Đã giao cho đơn vị vận chuyển
     DELIVERED,        // Đã giao thành công

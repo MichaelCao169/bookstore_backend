@@ -2,8 +2,13 @@ package com.michaelcao.bookstore_backend.controller;
 
 import com.michaelcao.bookstore_backend.dto.order.CreateOrderRequest;
 import com.michaelcao.bookstore_backend.dto.order.OrderDTO;
+import com.michaelcao.bookstore_backend.dto.payment.VNPayPaymentRequest;
+import com.michaelcao.bookstore_backend.dto.payment.VNPayPaymentResponse;
+import com.michaelcao.bookstore_backend.entity.PaymentMethod;
 import com.michaelcao.bookstore_backend.entity.User; // Import User
 import com.michaelcao.bookstore_backend.service.OrderService;
+import com.michaelcao.bookstore_backend.service.VNPayService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +32,7 @@ import java.util.UUID;
 public class OrderController {
 
     private final OrderService orderService;
+    private final VNPayService vnPayService;
 
     // Helper method để lấy User ID từ Security Context (Giống CartController)
     private Long getCurrentUserId() {
@@ -43,15 +49,20 @@ public class OrderController {
      * Endpoint để tạo một đơn hàng mới từ giỏ hàng của người dùng hiện tại.
      */
     @PostMapping
-    public ResponseEntity<OrderDTO> createOrder(@Valid @RequestBody CreateOrderRequest request) {
+    public ResponseEntity<?> createOrder(@Valid @RequestBody CreateOrderRequest request, HttpServletRequest httpRequest) {
         Long userId = getCurrentUserId();
         log.info("Request received to create order for user ID: {} with payment method: {}", userId, request.getPaymentMethod());
-        // Service sẽ xử lý việc lấy giỏ hàng, kiểm tra, tạo đơn hàng, trừ kho, xóa giỏ (nếu COD)
+        
+        // Tạo đơn hàng
         OrderDTO createdOrder = orderService.createOrder(userId, request);
-        // Trả về 201 Created nếu thành công (hoặc 200 OK cũng chấp nhận được)
+        
+        // Nếu là thanh toán VNPay, tạo payment URL
+        if (request.getPaymentMethod() == PaymentMethod.VNPAY) {
+            return handleVNPayPayment(createdOrder, httpRequest);
+        }
+        
+        // Trả về đơn hàng cho các phương thức thanh toán khác
         return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
-        // TODO: Nếu là thanh toán online (VNPAY), response thực tế sẽ chứa paymentUrl thay vì OrderDTO trực tiếp.
-        // Cần sửa lại logic trả về trong OrderService và Controller khi implement VNPAY.
     }
 
     /**
@@ -87,6 +98,59 @@ public class OrderController {
         log.info("Request received to cancel order ID: {} for user ID: {}", orderId, userId);
         OrderDTO cancelledOrder = orderService.cancelOrder(userId, orderId);
         return ResponseEntity.ok(cancelledOrder);
+    }
+
+    /**
+     * Helper method để xử lý thanh toán VNPay
+     */
+    private ResponseEntity<?> handleVNPayPayment(OrderDTO order, HttpServletRequest httpRequest) {
+        try {
+            // Tạo VNPay payment request
+            VNPayPaymentRequest paymentRequest = new VNPayPaymentRequest();
+            paymentRequest.setAmount(order.getTotalAmount());
+            paymentRequest.setOrderInfo("Thanh toan don hang " + order.getOrderId().toString().substring(0, 8));
+            paymentRequest.setReturnUrl("http://localhost:3000/payment/result"); // Frontend URL
+            
+            // Lấy IP address của client
+            String ipAddress = getClientIpAddress(httpRequest);
+            paymentRequest.setIpAddress(ipAddress);
+            
+            // Tạo payment URL
+            VNPayPaymentResponse paymentResponse = vnPayService.createPaymentUrl(order.getOrderId(), paymentRequest);
+            
+            if (paymentResponse.isSuccess()) {
+                return ResponseEntity.ok(paymentResponse);
+            } else {
+                return ResponseEntity.badRequest().body(paymentResponse);
+            }
+            
+        } catch (Exception e) {
+            log.error("Error creating VNPay payment for order {}: {}", order.getOrderId(), e.getMessage());
+            return ResponseEntity.internalServerError().body("Failed to create payment URL");
+        }
+    }
+    
+    /**
+     * Helper method để lấy IP address của client
+     */
+    private String getClientIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty() && !"unknown".equalsIgnoreCase(xForwardedFor)) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isEmpty() && !"unknown".equalsIgnoreCase(xRealIp)) {
+            return xRealIp;
+        }
+        
+        String remoteAddr = request.getRemoteAddr();
+        // Convert IPv6 localhost to IPv4
+        if ("0:0:0:0:0:0:0:1".equals(remoteAddr) || "::1".equals(remoteAddr)) {
+            return "127.0.0.1";
+        }
+        
+        return remoteAddr;
     }
 
     // --- Các API cho Admin sẽ nằm trong AdminOrderController hoặc AdminController ---

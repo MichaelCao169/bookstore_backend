@@ -365,6 +365,12 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalArgumentException("Invalid status transition from " + currentStatus + " to " + newStatus);
         }
 
+        // Update soldCount when order is delivered
+        if (newStatus == OrderStatus.DELIVERED && currentStatus != OrderStatus.DELIVERED) {
+            log.info("Order {} is being marked as DELIVERED, updating soldCount for products", orderId);
+            updateSoldCountForDeliveredOrder(order);
+        }
+
         order.setStatus(newStatus);
         Order updatedOrder = orderRepository.save(order); // Lưu trạng thái mới
         log.info("Order status updated successfully for order ID: {}", orderId);
@@ -379,6 +385,30 @@ public class OrderServiceImpl implements OrderService {
         // Cách 2: Map từ updatedOrder, chấp nhận User/Items có thể là proxy/null nếu DTO không cần
         // Cần đảm bảo `mapToOrderDTO` xử lý null an toàn.
         // return mapToOrderDTO(updatedOrder);
+    }
+
+    /**
+     * Update soldCount for all products in a delivered order
+     */
+    private void updateSoldCountForDeliveredOrder(Order order) {
+        // Get order items - need to fetch them if not already loaded
+        Set<OrderItem> orderItems = order.getOrderItems();
+        if (orderItems == null || orderItems.isEmpty()) {
+            // Fetch order items if not loaded
+            orderItems = new HashSet<>(orderItemRepository.findByOrderId(order.getId()));
+        }
+
+        for (OrderItem item : orderItems) {
+            Product product = item.getProduct();
+            if (product != null) {
+                // Update soldCount
+                Integer currentSoldCount = product.getSoldCount() != null ? product.getSoldCount() : 0;
+                product.setSoldCount(currentSoldCount + item.getQuantity());
+                productRepository.save(product);
+                log.info("Updated soldCount for product ID {}: {} -> {}", 
+                    product.getProductId(), currentSoldCount, product.getSoldCount());
+            }
+        }
     }
 
     // Optional: Helper method để kiểm tra logic chuyển đổi trạng thái

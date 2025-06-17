@@ -31,6 +31,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.HashSet;
 import java.util.Set;
+import com.michaelcao.bookstore_backend.repository.OrderItemRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +41,10 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ReviewRepository reviewRepository;
-    private final OrderRepository orderRepository;    // --- Helper methods for mapping ---
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+
+    // --- Helper methods for mapping ---
     private ProductDTO mapToProductDTO(Product product, ReviewStats stats) {
         ProductDTO dto = new ProductDTO();
         dto.setProductId(product.getProductId());
@@ -50,6 +54,7 @@ public class ProductServiceImpl implements ProductService {
         dto.setOriginalPrice(product.getOriginalPrice());
         dto.setCurrentPrice(product.getCurrentPrice());
         dto.setQuantity(product.getQuantity());
+        dto.setSoldCount(product.getSoldCount() != null ? product.getSoldCount() : 0);
         dto.setCoverLink(product.getCoverLink());
         dto.setPages(product.getPages());
         dto.setPublisher(product.getPublisher());
@@ -315,5 +320,36 @@ public class ProductServiceImpl implements ProductService {
         List<String> authors = productRepository.findAllUniqueAuthors();
         log.debug("Found {} unique authors", authors.size());
         return authors;
+    }
+
+    @Override
+    @Transactional
+    public void recalculateSoldCountForAllProducts() {
+        log.info("Starting recalculation of soldCount for all products");
+        
+        // Get all products
+        List<Product> allProducts = productRepository.findAll();
+        log.info("Found {} products to recalculate soldCount", allProducts.size());
+        
+        int updatedCount = 0;
+        for (Product product : allProducts) {
+            // Calculate total sold count from delivered orders
+            Integer totalSold = orderItemRepository.calculateTotalSoldByProductId(product.getProductId());
+            if (totalSold == null) {
+                totalSold = 0;
+            }
+            
+            // Update if different from current value
+            Integer currentSoldCount = product.getSoldCount() != null ? product.getSoldCount() : 0;
+            if (!currentSoldCount.equals(totalSold)) {
+                product.setSoldCount(totalSold);
+                productRepository.save(product);
+                updatedCount++;
+                log.debug("Updated soldCount for product {} ({}): {} -> {}", 
+                    product.getProductId(), product.getTitle(), currentSoldCount, totalSold);
+            }
+        }
+        
+        log.info("Completed recalculation of soldCount. Updated {} products", updatedCount);
     }
 }

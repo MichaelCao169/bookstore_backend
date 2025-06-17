@@ -13,9 +13,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -44,24 +48,14 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public String getAiResponse(String userQuery) {
-        log.info("AI Chat: Processing query from user");
+        log.info("AI Chat: Processing query: '{}'", userQuery);
 
-        // 1. Retrieval: Tìm kiếm các sản phẩm liên quan trong DB
-        List<Product> relevantProducts = productRepository.searchByTitleOrAuthor(userQuery, PageRequest.of(0, 5)).getContent();
+        // 1. Enhanced Retrieval: Tìm kiếm các sản phẩm liên quan với multiple strategies
+        List<Product> relevantProducts = findRelevantProducts(userQuery);
         log.info("AI Chat: Found {} relevant products", relevantProducts.size());
         
-        // Nếu không tìm thấy sản phẩm liên quan, lấy một vài sản phẩm ngẫu nhiên
-        if (relevantProducts.isEmpty()) {
-            long totalProducts = productRepository.count();
-            if (totalProducts > 0) {
-                log.info("AI Chat: No specific matches found, using fallback products");
-                relevantProducts = productRepository.findAll(PageRequest.of(0, 3)).getContent();
-            } else {
-                log.warn("AI Chat: No products available in database");
-            }
-        }
-
         // 2. Augmentation: Tạo ngữ cảnh từ dữ liệu sách
         String bookContext = buildBookContext(relevantProducts);
 
@@ -69,30 +63,17 @@ public class AiChatServiceImpl implements AiChatService {
         String systemPrompt = "Bạn là một trợ lý ảo am hiểu về sách tên là Atom, làm việc tại hiệu sách AtomikBooks. " +
                 "Nhiệm vụ của bạn là tư vấn sách cho khách hàng một cách thân thiện, nhiệt tình và chuyên nghiệp. " +
                 "Dựa vào danh sách các cuốn sách được cung cấp dưới đây, hãy trả lời câu hỏi của khách hàng. " +
-                "Nếu không có sách liên quan trực tiếp đến câu hỏi, hãy giới thiệu những cuốn sách hay có sẵn trong cửa hàng. " +
+                "Nếu có sách liên quan trực tiếp, hãy ưu tiên giới thiệu những cuốn sách đó. " +
+                "Nếu không có sách liên quan trực tiếp, hãy giới thiệu những cuốn sách hay có sẵn trong cửa hàng. " +
                 "Luôn luôn cố gắng giới thiệu ít nhất một cuốn sách từ danh sách có sẵn. " +
-                "Câu trả lời cần ngắn gọn, tập trung vào việc giới thiệu sách và khuyến khích khách hàng mua hàng.";
+                "Bao gồm thông tin về giá cả và khuyến khích khách hàng mua hàng. " +
+                "Câu trả lời cần ngắn gọn, tập trung vào việc giới thiệu sách.";
 
-        // Kiểm tra xem có phải dùng fallback products không
-        boolean isUsingFallback = relevantProducts.size() > 0 && 
-                                  productRepository.searchByTitleOrAuthor(userQuery, PageRequest.of(0, 1)).isEmpty();
-
-        String userPrompt;
-        if (isUsingFallback) {
-            userPrompt = "Dưới đây là một số cuốn sách hay có sẵn tại cửa hàng:\n" +
-                    "---BEGIN BOOK LIST---\n" +
-                    bookContext +
-                    "\n---END BOOK LIST---\n\n" +
-                    "Khách hàng hỏi: \"" + userQuery + "\"\n" +
-                    "Hãy trả lời thân thiện và giới thiệu những cuốn sách hay từ danh sách trên, " +
-                    "ngay cả khi chúng không liên quan trực tiếp đến câu hỏi.";
-        } else {
-            userPrompt = "Dưới đây là danh sách các cuốn sách có thể liên quan:\n" +
-                    "---BEGIN BOOK LIST---\n" +
-                    bookContext +
-                    "\n---END BOOK LIST---\n\n" +
-                    "Dựa vào danh sách trên, hãy trả lời câu hỏi của khách hàng: \"" + userQuery + "\"";
-        }
+        String userPrompt = "Dưới đây là danh sách các cuốn sách có thể liên quan:\n" +
+                "---BEGIN BOOK LIST---\n" +
+                bookContext +
+                "\n---END BOOK LIST---\n\n" +
+                "Dựa vào danh sách trên, hãy trả lời câu hỏi của khách hàng: \"" + userQuery + "\"";
 
         try {
             ChatCompletionCreateParams request = ChatCompletionCreateParams.builder()
@@ -120,21 +101,223 @@ public class AiChatServiceImpl implements AiChatService {
         }
     }
 
+    /**
+     * Enhanced search method with multiple strategies
+     */
+    private List<Product> findRelevantProducts(String userQuery) {
+        String normalizedQuery = normalizeVietnameseText(userQuery);
+        log.info("AI Chat: Original query: '{}', Normalized: '{}'", userQuery, normalizedQuery);
+        
+        // Extract important keywords from the query
+        List<String> keywords = extractKeywords(normalizedQuery);
+        log.info("AI Chat: Extracted keywords: {}", keywords);
+        
+        // Strategy 1: Exact keyword search in title or author (with eager category loading)
+        List<Product> exactMatches = productRepository.searchByTitleOrAuthorWithCategory(normalizedQuery, PageRequest.of(0, 5)).getContent();
+        
+        if (!exactMatches.isEmpty()) {
+            log.info("AI Chat: Found {} exact matches", exactMatches.size());
+            return exactMatches;
+        }
+        
+        // Strategy 2: Try original query without normalization (in case user uses English)
+        if (!userQuery.equals(normalizedQuery)) {
+            List<Product> originalMatches = productRepository.searchByTitleOrAuthorWithCategory(userQuery, PageRequest.of(0, 5)).getContent();
+            if (!originalMatches.isEmpty()) {
+                log.info("AI Chat: Found {} matches with original query", originalMatches.size());
+                return originalMatches;
+            }
+        }
+        
+        // Strategy 3: Try with extracted keywords
+        for (String keyword : keywords) {
+            if (keyword.length() > 1) { // Allow shorter keywords for book titles
+                List<Product> keywordMatches = productRepository.searchByTitleOrAuthorWithCategory(keyword, PageRequest.of(0, 5)).getContent();
+                if (!keywordMatches.isEmpty()) {
+                    log.info("AI Chat: Found {} matches for keyword '{}'", keywordMatches.size(), keyword);
+                    return keywordMatches;
+                }
+            }
+        }
+        
+        // Strategy 4: Try with individual words from the normalized query
+        String[] queryWords = normalizedQuery.split("\\s+");
+        for (String word : queryWords) {
+            if (word.length() > 2) { // Skip very short words
+                List<Product> wordMatches = productRepository.searchByTitleOrAuthorWithCategory(word, PageRequest.of(0, 5)).getContent();
+                if (!wordMatches.isEmpty()) {
+                    log.info("AI Chat: Found {} matches for word '{}'", wordMatches.size(), word);
+                    return wordMatches;
+                }
+            }
+        }
+        
+        // Strategy 5: Try title-only search (with eager category loading)
+        List<Product> titleMatches = productRepository.findByTitleContainingIgnoreCaseWithCategory(normalizedQuery, PageRequest.of(0, 5)).getContent();
+        if (!titleMatches.isEmpty()) {
+            log.info("AI Chat: Found {} title matches", titleMatches.size());
+            return titleMatches;
+        }
+        
+        // Strategy 6: Try author-only search (with eager category loading)
+        List<Product> authorMatches = productRepository.findByAuthorContainingIgnoreCaseWithCategory(normalizedQuery, PageRequest.of(0, 5)).getContent();
+        if (!authorMatches.isEmpty()) {
+            log.info("AI Chat: Found {} author matches", authorMatches.size());
+            return authorMatches;
+        }
+        
+        // Strategy 7: Try partial matches for each keyword
+        for (String keyword : keywords) {
+            if (keyword.length() > 1) {
+                List<Product> partialTitleMatches = productRepository.findByTitleContainingIgnoreCaseWithCategory(keyword, PageRequest.of(0, 3)).getContent();
+                if (!partialTitleMatches.isEmpty()) {
+                    log.info("AI Chat: Found {} partial title matches for keyword '{}'", partialTitleMatches.size(), keyword);
+                    return partialTitleMatches;
+                }
+                
+                List<Product> partialAuthorMatches = productRepository.findByAuthorContainingIgnoreCaseWithCategory(keyword, PageRequest.of(0, 3)).getContent();
+                if (!partialAuthorMatches.isEmpty()) {
+                    log.info("AI Chat: Found {} partial author matches for keyword '{}'", partialAuthorMatches.size(), keyword);
+                    return partialAuthorMatches;
+                }
+            }
+        }
+        
+        // Strategy 8: Try partial matches for each word
+        for (String word : queryWords) {
+            if (word.length() > 2) {
+                List<Product> partialTitleMatches = productRepository.findByTitleContainingIgnoreCaseWithCategory(word, PageRequest.of(0, 3)).getContent();
+                if (!partialTitleMatches.isEmpty()) {
+                    log.info("AI Chat: Found {} partial title matches for word '{}'", partialTitleMatches.size(), word);
+                    return partialTitleMatches;
+                }
+                
+                List<Product> partialAuthorMatches = productRepository.findByAuthorContainingIgnoreCaseWithCategory(word, PageRequest.of(0, 3)).getContent();
+                if (!partialAuthorMatches.isEmpty()) {
+                    log.info("AI Chat: Found {} partial author matches for word '{}'", partialAuthorMatches.size(), word);
+                    return partialAuthorMatches;
+                }
+            }
+        }
+        
+        // Strategy 9: Fallback to popular books (best sellers) with eager category loading
+        List<Product> fallbackProducts = productRepository.findAllByOrderBySoldCountDescWithCategory();
+        if (!fallbackProducts.isEmpty()) {
+            log.info("AI Chat: Using {} fallback products (best sellers)", Math.min(fallbackProducts.size(), 3));
+            return fallbackProducts.subList(0, Math.min(fallbackProducts.size(), 3));
+        }
+        
+        // Strategy 10: Last resort - any available books with eager category loading
+        List<Product> anyProducts = productRepository.findAllWithCategoriesFetched(PageRequest.of(0, 3)).getContent();
+        log.info("AI Chat: Using {} random products as last resort", anyProducts.size());
+        return anyProducts;
+    }
+
+    /**
+     * Extract meaningful keywords from user query by removing noise words
+     */
+    private List<String> extractKeywords(String query) {
+        // Common Vietnamese noise words to filter out
+        String[] noiseWords = {
+            "co", "có", "cuon", "cuốn", "sach", "sách", "nao", "nào", "gi", "gì", 
+            "the", "thế", "la", "là", "cua", "của", "trong", "va", "và", "voi", "với",
+            "cho", "toi", "tôi", "moi", "mình", "ban", "bạn", "anh", "chi", "chị",
+            "khong", "không", "tim", "tìm", "kiem", "kiếm", "hay", "dep", "đẹp",
+            "tot", "tốt", "nhat", "nhất", "ve", "về", "roi", "rồi", "da", "đã", "se", "sẽ",
+            "duoc", "được", "dang", "đang", "cang", "càng", "rat", "rất", "qua", "quá"
+        };
+        
+        // Use HashSet to handle potential duplicates in noiseWords array
+        Set<String> noiseSet = new HashSet<>(Arrays.asList(noiseWords));
+        
+        return Arrays.stream(query.split("\\s+"))
+                .map(String::trim)
+                .filter(word -> word.length() > 1)
+                .filter(word -> !noiseSet.contains(word.toLowerCase()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Normalize Vietnamese text by removing diacritics and converting to lowercase
+     */
+    private String normalizeVietnameseText(String text) {
+        if (text == null || text.trim().isEmpty()) return "";
+        
+        // Convert to lowercase and trim
+        String normalized = text.toLowerCase().trim();
+        
+        // Remove extra spaces and normalize whitespace
+        normalized = normalized.replaceAll("\\s+", " ");
+        
+        // Remove common Vietnamese diacritics
+        normalized = normalized
+                .replaceAll("[àáạảãâầấậẩẫăằắặẳẵ]", "a")
+                .replaceAll("[èéẹẻẽêềếệểễ]", "e")
+                .replaceAll("[ìíịỉĩ]", "i")
+                .replaceAll("[òóọỏõôồốộổỗơờớợởỡ]", "o")
+                .replaceAll("[ùúụủũưừứựửữ]", "u")
+                .replaceAll("[ỳýỵỷỹ]", "y")
+                .replaceAll("đ", "d")
+                .replaceAll("[ÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴ]", "a")
+                .replaceAll("[ÈÉẸẺẼÊỀẾỆỂỄ]", "e")
+                .replaceAll("[ÌÍỊỈĨ]", "i")
+                .replaceAll("[ÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠ]", "o")
+                .replaceAll("[ÙÚỤỦŨƯỪỨỰỬỮ]", "u")
+                .replaceAll("[ỲÝỴỶỸ]", "y")
+                .replaceAll("Đ", "d");
+        
+        // Remove punctuation marks that might interfere with search
+        normalized = normalized.replaceAll("[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?~`]", " ");
+        
+        // Remove extra spaces again after punctuation removal
+        normalized = normalized.replaceAll("\\s+", " ").trim();
+        
+        return normalized;
+    }
+
     private String buildBookContext(List<Product> products) {
         if (products == null || products.isEmpty()) {
             return "Không có sách nào trong danh sách.";
         }
 
         return products.stream()
-                .map(product -> String.format(
-                        "- Tiêu đề: %s\n  Tác giả: %s\n  Mô tả: %s\n  Giá: %,.0f VND",
-                        product.getTitle(),
-                        product.getAuthor(),
-                        product.getDescription() != null && product.getDescription().length() > 150
-                                ? product.getDescription().substring(0, 150) + "..."
-                                : product.getDescription(),
-                        product.getCurrentPrice()
-                ))
+                .map(product -> {
+                    StringBuilder bookInfo = new StringBuilder();
+                    
+                    // Null-safe title
+                    String title = product.getTitle() != null ? product.getTitle() : "Tên sách không xác định";
+                    bookInfo.append(String.format("📚 **%s**", title));
+                    
+                    // Null-safe author
+                    String author = product.getAuthor() != null ? product.getAuthor() : "Tác giả không xác định";
+                    bookInfo.append(String.format("\n   ✍️ Tác giả: %s", author));
+                    
+                    if (product.getDescription() != null && !product.getDescription().trim().isEmpty()) {
+                        String description = product.getDescription().length() > 200
+                                ? product.getDescription().substring(0, 200) + "..."
+                                : product.getDescription();
+                        bookInfo.append(String.format("\n   📖 Mô tả: %s", description));
+                    }
+                    
+                    // Null-safe price
+                    if (product.getCurrentPrice() != null) {
+                        bookInfo.append(String.format("\n   💰 Giá: %,.0f VND", product.getCurrentPrice()));
+                    } else {
+                        bookInfo.append("\n   💰 Giá: Liên hệ");
+                    }
+                    
+                    // Fix NullPointerException: kiểm tra null trước khi so sánh
+                    if (product.getSoldCount() != null && product.getSoldCount() > 0) {
+                        bookInfo.append(String.format("\n   📊 Đã bán: %d cuốn", product.getSoldCount()));
+                    }
+                    
+                    // Fix NullPointerException: kiểm tra null cho category
+                    if (product.getCategory() != null && product.getCategory().getName() != null) {
+                        bookInfo.append(String.format("\n   🏷️ Thể loại: %s", product.getCategory().getName()));
+                    }
+                    
+                    return bookInfo.toString();
+                })
                 .collect(Collectors.joining("\n\n"));
     }
 }

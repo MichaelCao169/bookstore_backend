@@ -101,4 +101,10 @@ public interface ProductService {
      * @return List chứa danh sách tên tác giả duy nhất
      */
     List<String> getAllAuthors();
+
+    /**
+     * Recalculate and update soldCount for all products based on delivered orders
+     * This method should be used to initialize or fix soldCount data
+     */
+    void recalculateSoldCountForAllProducts();
 }

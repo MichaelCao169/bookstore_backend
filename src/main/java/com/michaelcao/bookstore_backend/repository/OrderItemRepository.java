@@ -48,4 +48,12 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, UUID> { //
      */
     @Query("SELECT oi FROM OrderItem oi JOIN FETCH oi.product p WHERE oi.order.id IN :orderIds")
     List<OrderItem> findByOrderIdInWithProduct(@Param("orderIds") List<UUID> orderIds);
+
+    /**
+     * Calculate total sold quantity for a product from delivered orders only
+     * @param productId ID of the product
+     * @return Total quantity sold from delivered orders
+     */
+    @Query("SELECT SUM(oi.quantity) FROM OrderItem oi JOIN oi.order o WHERE oi.product.productId = :productId AND o.status = 'DELIVERED'")
+    Integer calculateTotalSoldByProductId(@Param("productId") UUID productId);
 }
