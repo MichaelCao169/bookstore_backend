@@ -5,7 +5,7 @@ import com.michaelcao.bookstore_backend.dto.order.OrderDTO;
 import com.michaelcao.bookstore_backend.dto.payment.VNPayPaymentRequest;
 import com.michaelcao.bookstore_backend.dto.payment.VNPayPaymentResponse;
 import com.michaelcao.bookstore_backend.entity.PaymentMethod;
-import com.michaelcao.bookstore_backend.entity.User; // Import User
+import com.michaelcao.bookstore_backend.entity.User; 
 import com.michaelcao.bookstore_backend.service.OrderService;
 import com.michaelcao.bookstore_backend.service.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault; // Import PageableDefault
+import org.springframework.data.web.PageableDefault; 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,13 +28,13 @@ import java.util.UUID;
 @RequestMapping("/api/orders") // Base path cho các API liên quan đến đơn hàng của người dùng
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasRole('CUSTOMER')") // Yêu cầu quyền CUSTOMER cho tất cả API trong controller này
+@PreAuthorize("hasRole('CUSTOMER')") 
 public class OrderController {
 
     private final OrderService orderService;
     private final VNPayService vnPayService;
 
-    // Helper method để lấy User ID từ Security Context (Giống CartController)
+    //  method để lấy User ID từ Security Context
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof User)) {
@@ -45,9 +45,7 @@ public class OrderController {
         return currentUser.getId();
     }
 
-    /**
-     * Endpoint để tạo một đơn hàng mới từ giỏ hàng của người dùng hiện tại.
-     */
+    // Endpoint để tạo một đơn hàng mới từ giỏ hàng của người dùng hiện tại.
     @PostMapping
     public ResponseEntity<?> createOrder(@Valid @RequestBody CreateOrderRequest request, HttpServletRequest httpRequest) {
         Long userId = getCurrentUserId();
@@ -65,9 +63,7 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
     }
 
-    /**
-     * Endpoint để lấy lịch sử đơn hàng của người dùng hiện tại (phân trang).
-     */
+    // Endpoint để lấy lịch sử đơn hàng của người dùng hiện tại (phân trang).
     @GetMapping("/my-history")
     public ResponseEntity<Page<OrderDTO>> getMyOrderHistory(
             @PageableDefault(size = 10, sort = "orderDate", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
@@ -77,9 +73,7 @@ public class OrderController {
         return ResponseEntity.ok(orderPage);
     }
 
-    /**
-     * Endpoint để lấy chi tiết một đơn hàng cụ thể của người dùng hiện tại.
-     */
+    // Endpoint để lấy chi tiết một đơn hàng cụ thể của người dùng hiện tại.
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderDTO> getMyOrderDetails(@PathVariable UUID orderId) {
         Long userId = getCurrentUserId();
@@ -88,10 +82,7 @@ public class OrderController {
         return ResponseEntity.ok(orderDetails);
     }
 
-    /**
-     * Endpoint để khách hàng hủy đơn hàng của mình.
-     * Chỉ cho phép hủy đơn hàng ở trạng thái PENDING hoặc PENDING_PAYMENT.
-     */
+    // Endpoint để khách hàng hủy đơn hàng của mình.
     @PutMapping("/{orderId}/cancel")
     public ResponseEntity<OrderDTO> cancelOrder(@PathVariable UUID orderId) {
         Long userId = getCurrentUserId();
@@ -100,9 +91,7 @@ public class OrderController {
         return ResponseEntity.ok(cancelledOrder);
     }
 
-    /**
-     * Helper method để xử lý thanh toán VNPay
-     */
+    //   method để xử lý thanh toán VNPay
     private ResponseEntity<?> handleVNPayPayment(OrderDTO order, HttpServletRequest httpRequest) {
         try {
             // Tạo VNPay payment request
@@ -130,9 +119,7 @@ public class OrderController {
         }
     }
     
-    /**
-     * Helper method để lấy IP address của client
-     */
+        //  method để lấy IP address của client
     private String getClientIpAddress(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isEmpty() && !"unknown".equalsIgnoreCase(xForwardedFor)) {
@@ -145,7 +132,7 @@ public class OrderController {
         }
         
         String remoteAddr = request.getRemoteAddr();
-        // Convert IPv6 localhost to IPv4
+        // Chuyển IPv6 localhost sang IPv4
         if ("0:0:0:0:0:0:0:1".equals(remoteAddr) || "::1".equals(remoteAddr)) {
             return "127.0.0.1";
         }
@@ -153,5 +140,4 @@ public class OrderController {
         return remoteAddr;
     }
 
-    // --- Các API cho Admin sẽ nằm trong AdminOrderController hoặc AdminController ---
 }

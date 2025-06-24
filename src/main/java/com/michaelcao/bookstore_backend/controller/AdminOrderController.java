@@ -26,9 +26,7 @@ public class AdminOrderController {
         this.orderService = orderService;
     }
 
-    /**
-     * Endpoint cho Admin lấy danh sách tất cả đơn hàng (phân trang).
-     */
+    // Endpoint cho Admin lấy danh sách tất cả đơn hàng (phân trang).
     @GetMapping
     public ResponseEntity<Page<OrderDTO>> getAllOrders(
             @PageableDefault(size = 15, sort = "orderDate", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
@@ -37,9 +35,7 @@ public class AdminOrderController {
         return ResponseEntity.ok(orderPage);
     }
 
-    /**
-     * Endpoint cho Admin lấy chi tiết một đơn hàng bất kỳ.
-     */
+    // Endpoint cho Admin lấy chi tiết một đơn hàng bất kỳ.
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderDTO> getOrderById(@PathVariable UUID orderId) {
         log.info("Admin request received to get details for order ID: {}", orderId);
@@ -47,9 +43,7 @@ public class AdminOrderController {
         return ResponseEntity.ok(orderDetails);
     }
 
-    /**
-     * Endpoint cho Admin cập nhật trạng thái của một đơn hàng.
-     */
+    // Endpoint cho Admin cập nhật trạng thái của một đơn hàng.
     @PutMapping("/{orderId}/status")
     public ResponseEntity<OrderDTO> updateOrderStatus(
             @PathVariable UUID orderId,

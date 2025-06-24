@@ -20,10 +20,10 @@ import java.util.Set;
         @Index(name = "idx_product_title", columnList = "title"),
         @Index(name = "idx_product_author", columnList = "author"),
         @Index(name = "idx_product_category", columnList = "categoryId"),
-        @Index(name = "idx_product_current_price", columnList = "current_price"), // For price-based filtering
-        @Index(name = "idx_product_quantity", columnList = "quantity"), // For stock filtering
-        @Index(name = "idx_product_sold_count", columnList = "sold_count"), // For bestseller sorting
-        @Index(name = "idx_product_created", columnList = "created_at") // For sorting by creation date
+        @Index(name = "idx_product_current_price", columnList = "current_price"), // Cho phép tìm kiếm theo giá
+        @Index(name = "idx_product_quantity", columnList = "quantity"), // Cho phép tìm kiếm theo số lượng
+        @Index(name = "idx_product_sold_count", columnList = "sold_count"), // Cho phép tìm kiếm theo số lượng đã bán
+        @Index(name = "idx_product_created", columnList = "created_at") // Cho phép tìm kiếm theo ngày tạo
 })
 @Getter
 @Setter
@@ -106,7 +106,7 @@ public class Product {    @Id
     // Tự động cập nhật timestamp khi bản ghi được cập nhật
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;    // --- Constructor (tùy chọn) ---
+    private Instant updatedAt;
     public Product(String title, String author, BigDecimal originalPrice, BigDecimal currentPrice, Integer quantity, Category category) {
         this.title = title;
         this.author = author;

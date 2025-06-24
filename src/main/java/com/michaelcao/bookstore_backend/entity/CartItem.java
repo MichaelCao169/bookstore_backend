@@ -51,11 +51,4 @@ public class CartItem {
         this.quantity = quantity;
     }
 
-    // Có thể thêm phương thức tính giá tiền cho item này
-    // public BigDecimal getSubtotal() {
-    //     if (product != null && product.getPrice() != null && quantity != null) {
-    //         return product.getPrice().multiply(BigDecimal.valueOf(quantity));
-    //     }
-    //     return BigDecimal.ZERO;
-    // }
 }

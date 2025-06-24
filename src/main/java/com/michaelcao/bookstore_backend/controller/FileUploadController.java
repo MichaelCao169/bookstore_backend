@@ -27,10 +27,7 @@ public class FileUploadController {
     @Value("${app.url:http://localhost:8080}")
     private String appUrl;
 
-    /**
-     * Endpoint để upload avatar của người dùng.
-     * Cho phép các định dạng hình ảnh phổ biến: JPEG, PNG, GIF.
-     */
+    // Endpoint để upload avatar của người dùng.
     @PostMapping("/avatar")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, String>> uploadAvatar(@RequestParam("file") MultipartFile file) {
@@ -79,9 +76,7 @@ public class FileUploadController {
         }
     }
 
-    /**
-     * Endpoint để truy cập các file avatar đã upload.
-     */
+    // Endpoint để truy cập các file avatar đã upload.
     @GetMapping("/avatars/{filename:.+}")
     public ResponseEntity<byte[]> getAvatar(@PathVariable String filename) {
         try {
@@ -102,10 +97,7 @@ public class FileUploadController {
         }
     }
 
-    /**
-     * Endpoint để upload file trong chat.
-     * Cho phép nhiều định dạng file: hình ảnh, PDF, tài liệu văn phòng, archive.
-     */
+    // Endpoint để upload file trong chat.
     @PostMapping("/chat")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, String>> uploadChatFile(@RequestParam("file") MultipartFile file) {
@@ -185,9 +177,7 @@ public class FileUploadController {
         }
     }
 
-    /**
-     * Endpoint để truy cập các file chat đã upload.
-     */
+    // Endpoint để truy cập các file chat đã upload.
     @GetMapping("/chat/{filename:.+}")
     public ResponseEntity<byte[]> getChatFile(@PathVariable String filename) {
         try {

@@ -1,9 +1,9 @@
 package com.michaelcao.bookstore_backend.dto.category;
 
 import lombok.Data;
-import lombok.NoArgsConstructor; // Thêm constructor không tham số nếu cần
+import lombok.NoArgsConstructor; 
 
-@Data // Lombok: Tạo getter, setter, toString, equals, hashCode
+@Data 
 @NoArgsConstructor
 public class CategoryDTO {
     private Long id;

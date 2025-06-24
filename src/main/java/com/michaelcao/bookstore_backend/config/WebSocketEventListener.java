@@ -23,13 +23,13 @@ public class WebSocketEventListener {    private final OnlineUserService onlineU
         String sessionId = headerAccessor.getSessionId();
         
         log.debug("WebSocket connection established - Session ID: {}", sessionId);
-          // Extract user information from the session
+          // Lấy thông tin user từ session
         if (headerAccessor.getUser() != null) {
             try {
-                // Get the user ID from the authenticated user
+                // Lấy user ID từ user đã xác thực
                 String username = headerAccessor.getUser().getName();
                 
-                // Look up user by email/username to get the actual User ID
+                // Tìm user bằng email/username để lấy User ID thực tế
                 User user = userRepository.findByEmail(username).orElse(null);
                 
                 if (user != null) {
@@ -52,7 +52,7 @@ public class WebSocketEventListener {    private final OnlineUserService onlineU
         String sessionId = headerAccessor.getSessionId();
         
         log.debug("WebSocket connection closed - Session ID: {}", sessionId);
-          // Remove user from online users by session ID
+          // Xóa user khỏi danh sách online bằng session ID
         onlineUserService.removeUserBySession(sessionId);
         log.info("User disconnected from WebSocket (session: {})", sessionId);
     }

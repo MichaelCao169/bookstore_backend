@@ -4,7 +4,7 @@ import com.michaelcao.bookstore_backend.dto.user.ChangePasswordRequest;
 import com.michaelcao.bookstore_backend.dto.user.UpdateProfileRequest;
 import com.michaelcao.bookstore_backend.dto.user.UserProfileDTO;
 import com.michaelcao.bookstore_backend.dto.user.UpdateAvatarRequest;
-import com.michaelcao.bookstore_backend.entity.User; // Import User
+import com.michaelcao.bookstore_backend.entity.User;
 import com.michaelcao.bookstore_backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class UserController {
 
     private final UserService userService;
 
-    // Helper method để lấy User ID
+    //  method để lấy User ID
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof User) {
@@ -35,9 +35,7 @@ public class UserController {
         throw new IllegalStateException("User not authenticated properly."); // Ném lỗi nếu không lấy được ID
     }
 
-    /**
-     * Endpoint để lấy thông tin profile của người dùng đang đăng nhập.
-     */
+    // Endpoint để lấy thông tin profile của người dùng đang đăng nhập.
     @GetMapping
     public ResponseEntity<UserProfileDTO> getCurrentUserProfile() {
         Long userId = getCurrentUserId();
@@ -46,9 +44,7 @@ public class UserController {
         return ResponseEntity.ok(userProfile);
     }
 
-    /**
-     * Endpoint để thay đổi mật khẩu của người dùng đang đăng nhập.
-     */
+    // Endpoint để thay đổi mật khẩu của người dùng đang đăng nhập.
     @PutMapping("/change-password")
     public ResponseEntity<String> changeCurrentUserPassword(@Valid @RequestBody ChangePasswordRequest request) {
         Long userId = getCurrentUserId();
@@ -60,12 +56,10 @@ public class UserController {
             log.warn("Password change failed for user ID {}: {}", userId, e.getMessage());
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
-        // Các lỗi khác (ResourceNotFound) sẽ được GlobalExceptionHandler xử lý
+        // Các lỗi khác sẽ được GlobalExceptionHandler xử lý
     }
 
-    /**
-     * Endpoint để cập nhật ảnh đại diện của người dùng.
-     */
+    // Endpoint để cập nhật ảnh đại diện của người dùng.
     @PutMapping("/avatar")
     public ResponseEntity<UserProfileDTO> updateUserAvatar(@Valid @RequestBody UpdateAvatarRequest request) {
         Long userId = getCurrentUserId();
@@ -74,9 +68,7 @@ public class UserController {
         return ResponseEntity.ok(updatedProfile);
     }
 
-    /**
-     * Endpoint để cập nhật thông tin profile (ví dụ: tên).
-     */
+    // Endpoint để cập nhật thông tin profile (ví dụ: tên).
     @PutMapping
     public ResponseEntity<UserProfileDTO> updateCurrentUserProfile(@Valid @RequestBody UpdateProfileRequest request) {
         Long userId = getCurrentUserId();

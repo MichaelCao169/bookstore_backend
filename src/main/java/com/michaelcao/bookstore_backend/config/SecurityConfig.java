@@ -1,4 +1,4 @@
-package com.michaelcao.bookstore_backend.config; // Ensure correct package
+package com.michaelcao.bookstore_backend.config;
 
 import com.michaelcao.bookstore_backend.security.jwt.JwtAuthenticationFilter; // Ensure correct import
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
     private static final String[] PUBLIC_MATCHERS = {
             "/api/auth/**",
-            "/api/verify-email/**",
+            "/api/auth/verify-email/**",
             "/api/reset-password/**",
             "/api/test/hello-public",
             "/api/uploads/**",
@@ -40,13 +40,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Disable CSRF for REST API 
+            // vô hiệu hóa CSRF vì đây là API RESTful
             .csrf(AbstractHttpConfigurer::disable)
             
-            // Configure CORS
+            // thiết lập CORS
             .cors(cors -> {})
             
-            // Configure authorization rules
+            // Config authorization rules
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints
                 .requestMatchers(PUBLIC_MATCHERS).permitAll()
@@ -55,34 +55,34 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                 
-                // Customer-specific endpoints
+                // Customer endpoints
                 .requestMatchers("/api/cart/**").hasRole("CUSTOMER")
                 .requestMatchers("/api/orders/**").hasRole("CUSTOMER")
                 .requestMatchers("/api/wishlist/**").hasRole("CUSTOMER")
                     .requestMatchers("/api/ai-chat/**").authenticated()
-                  // Admin-specific endpoints
+                  // Admin endpoints
                 .requestMatchers("/api/products/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 
-                // Chat endpoints - both admin and customer can access
+                // Chat endpoints
                 .requestMatchers("/api/chat/**").authenticated()
                 
-                // User profile endpoints require any authenticated user
+                // User profile 
                 .requestMatchers("/api/profile/**").authenticated()
                 
-                // All other requests require authentication
+                // Còn lại các request đều phải đăng nhập
                 .anyRequest().authenticated()
             )
             
-            // Set stateless session management for REST API
+            //  Session management for REST APIs
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             
-            // Set authentication provider
+            //  authentication provider
             .authenticationProvider(authenticationProvider)
             
-            // Add JWT filter before UsernamePasswordAuthenticationFilter
+            // Thêm JWT filter trước UsernamePasswordAuthenticationFilter
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

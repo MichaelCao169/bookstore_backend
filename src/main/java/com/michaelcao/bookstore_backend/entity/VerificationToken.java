@@ -12,7 +12,7 @@ import java.time.Instant;
 @Table(name = "verification_tokens")
 public class VerificationToken {
 
-    private static final int EXPIRATION_MINUTES = 60 * 24; // 24 hours
+    private static final int EXPIRATION_MINUTES = 60 * 24; // 24h
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,7 +35,7 @@ public class VerificationToken {
     }
 
     private Instant calculateExpiryDate(int expiryTimeInMinutes) {
-        return Instant.now().plusSeconds(expiryTimeInMinutes * 60L); // Use 60L for long
+        return Instant.now().plusSeconds(expiryTimeInMinutes * 60L); //Long
     }
 
     public boolean isExpired() {

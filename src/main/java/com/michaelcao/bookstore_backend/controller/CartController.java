@@ -3,23 +3,22 @@ package com.michaelcao.bookstore_backend.controller;
 import com.michaelcao.bookstore_backend.dto.cart.AddToCartRequest;
 import com.michaelcao.bookstore_backend.dto.cart.CartDTO;
 import com.michaelcao.bookstore_backend.dto.cart.UpdateCartItemRequest;
-import com.michaelcao.bookstore_backend.entity.User; // Import User để lấy từ Principal
+import com.michaelcao.bookstore_backend.entity.User; 
 import com.michaelcao.bookstore_backend.service.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication; // Import Authentication
-import org.springframework.security.core.context.SecurityContextHolder; // Import SecurityContextHolder
-import org.springframework.web.bind.annotation.*; // Import các annotations cần thiết
+import org.springframework.security.core.Authentication; 
+import org.springframework.security.core.context.SecurityContextHolder; 
+import org.springframework.web.bind.annotation.*; 
 
 @RestController
 @RequestMapping("/api/cart") // Base path cho tất cả API giỏ hàng
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasRole('CUSTOMER')") // Yêu cầu quyền CUSTOMER cho tất cả API trong controller này
-// Hoặc có thể dùng @PreAuthorize("isAuthenticated()") nếu cả Admin cũng có thể có giỏ hàng (ít phổ biến)
+@PreAuthorize("hasRole('CUSTOMER')") 
 public class CartController {
 
     private final CartService cartService;
@@ -37,9 +36,7 @@ public class CartController {
         return currentUser.getId();
     }
 
-    /**
-     * Endpoint để lấy giỏ hàng của người dùng hiện tại.
-     */
+    // Endpoint để lấy giỏ hàng của người dùng hiện tại.
     @GetMapping
     public ResponseEntity<CartDTO> getUserCart() {
         Long userId = getCurrentUserId();
@@ -48,9 +45,7 @@ public class CartController {
         return ResponseEntity.ok(cart);
     }
 
-    /**
-     * Endpoint để thêm sản phẩm vào giỏ hàng.
-     */
+    // Endpoint để thêm sản phẩm vào giỏ hàng.
     @PostMapping("/items")
     public ResponseEntity<CartDTO> addItemToCart(@Valid @RequestBody AddToCartRequest request) {
         Long userId = getCurrentUserId();
@@ -60,10 +55,7 @@ public class CartController {
         return ResponseEntity.ok(updatedCart); // Trả về giỏ hàng đã cập nhật
     }
 
-    /**
-     * Endpoint để cập nhật số lượng của một item trong giỏ hàng.
-     * cartItemId được lấy từ đường dẫn URL.
-     */
+    // Endpoint để cập nhật số lượng của một item trong giỏ hàng.
     @PutMapping("/items/{cartItemId}")
     public ResponseEntity<CartDTO> updateCartItem(
             @PathVariable Long cartItemId,
@@ -75,10 +67,7 @@ public class CartController {
         return ResponseEntity.ok(updatedCart);
     }
 
-    /**
-     * Endpoint để xóa một item khỏi giỏ hàng.
-     * cartItemId được lấy từ đường dẫn URL.
-     */
+    // Endpoint để xóa một item khỏi giỏ hàng.
     @DeleteMapping("/items/{cartItemId}")
     public ResponseEntity<CartDTO> removeCartItem(@PathVariable Long cartItemId) {
         Long userId = getCurrentUserId();
@@ -87,9 +76,7 @@ public class CartController {
         return ResponseEntity.ok(updatedCart); // Trả về giỏ hàng sau khi xóa (có thể không đổi nếu item không tồn tại)
     }
 
-    /**
-     * Endpoint để xóa toàn bộ giỏ hàng của người dùng hiện tại.
-     */
+    // Endpoint để xóa toàn bộ giỏ hàng của người dùng hiện tại.
     @DeleteMapping
     public ResponseEntity<Void> clearUserCart() {
         Long userId = getCurrentUserId();

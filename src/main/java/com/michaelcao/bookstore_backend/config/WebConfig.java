@@ -13,12 +13,12 @@ public class WebConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**") // Apply CORS to API endpoints
-                        .allowedOrigins("http://localhost:3000") // Allow requests from your Next.js frontend
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS") // Allowed HTTP methods
-                        .allowedHeaders("*") // Allow all headers
-                        .allowCredentials(true) // Allow cookies (needed for HttpOnly refresh token)
-                        .maxAge(3600); // Cache CORS preflight response for 1 hour
+                registry.addMapping("/api/**") // Áp dụng CORS cho tất cả các endpoint bắt đầu bằng /api/
+                        .allowedOrigins("http://localhost:3000") //Cho phép request từ localhost:3000
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS") //  HTTP methods được phép
+                        .allowedHeaders("*") // Cho phép tất cả các header
+                        .allowCredentials(true) // Cho phép cookies (cần cho HttpOnly refresh token)
+                        .maxAge(3600); // Thời gian cache preflight request (1 giờ)
             }
         };
     }

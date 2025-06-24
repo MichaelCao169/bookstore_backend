@@ -35,7 +35,7 @@ public class User implements UserDetails {
     private String password; // Hashed password
 
     @Column(name = "is_enabled", nullable = false)
-    private boolean enabled = false; // Default: needs verification    @Column(name = "avatar_url")
+    private boolean enabled = false; // Mặc định là false, cần xác thực email
     private String avatarUrl = "/default-avatar.png"; // Mặc định có ảnh đại diện
 
     @Column(name = "display_name")
@@ -53,17 +53,17 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
-    // *** THÊM QUAN HỆ WISHLIST ***
+
     // Quan hệ Nhiều-Nhiều: Một User có thể thích nhiều Product, một Product có thể được nhiều User thích.
     @ManyToMany(fetch = FetchType.LAZY) // LAZY để không tải wishlist mỗi khi load User
     @JoinTable(
-            name = "user_wishlist", // Tên bảng join
+            name = "user_wishlist", // Bảng join giữa users và products
             joinColumns = @JoinColumn(name = "user_id"), // Khóa ngoại trỏ về bảng users
             inverseJoinColumns = @JoinColumn(name = "product_id") // Khóa ngoại trỏ về bảng products
     )
     @Builder.Default // Cho Lombok builder
     private Set<Product> wishlistItems = new HashSet<>();
-    // --- UserDetails methods ---
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
@@ -73,7 +73,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email; // Email is used as the username
+        return email;
     }
 
     @Override
@@ -83,17 +83,17 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Account never expires
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // Account is never locked
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // Credentials never expire
+        return true;
     }
 
     @Override
@@ -101,7 +101,7 @@ public class User implements UserDetails {
         return enabled;
     }
 
-    // --- Utility methods for Role management ---
+    //  phương thức để quản lý ROLES
     public void addRole(Role role) {
         this.roles.add(role);
     }
@@ -110,7 +110,7 @@ public class User implements UserDetails {
         this.roles.remove(role);
     }
 
-    // Helper methods (tùy chọn)
+
     public void addToWishlist(Product product) {
         this.wishlistItems.add(product);
         // Không cần set ngược lại ở Product vì đây là quan hệ ManyToMany do User quản lý join table

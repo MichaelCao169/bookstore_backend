@@ -27,9 +27,7 @@ public class AdminDashboardController {
     private final DashboardService dashboardService;
     private final ProductService productService;
 
-    /**
-     * Get dashboard statistics overview
-     */
+    // Lấy tổng quan thống kê dashboard
     @GetMapping("/stats")
     public ResponseEntity<DashboardStatsDTO> getDashboardStats() {
         log.info("Admin request received to get dashboard statistics");
@@ -37,20 +35,15 @@ public class AdminDashboardController {
         return ResponseEntity.ok(stats);
     }
 
-    /**
-     * Get top selling products
-     */
+    // Lấy top 5 sản phẩm bán chạy nhất
     @GetMapping("/top-products")
     public ResponseEntity<List<ProductDTO>> getTopSellingProducts() {
         log.info("Admin request received to get top selling products");
-        List<ProductDTO> topProducts = dashboardService.getTopSellingProducts(5); // limit to top 5
+        List<ProductDTO> topProducts = dashboardService.getTopSellingProducts(5); // limit 5
         return ResponseEntity.ok(topProducts);
     }
 
-    /**
-     * Recalculate soldCount for all products based on delivered orders
-     * This endpoint should be used to initialize or fix soldCount data
-     */
+    // Tính lại soldCount cho tất cả sản phẩm dựa trên đơn hàng đã giao
     @PostMapping("/recalculate-sold-count")
     public ResponseEntity<Map<String, String>> recalculateSoldCount() {
         log.info("Admin request received to recalculate soldCount for all products");

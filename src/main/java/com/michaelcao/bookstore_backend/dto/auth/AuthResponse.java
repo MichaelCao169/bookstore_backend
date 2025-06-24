@@ -13,9 +13,8 @@ import java.util.List;
 @AllArgsConstructor
 public class AuthResponse {
     private String accessToken;
-    private String refreshToken; // Add refresh token field
+    private String refreshToken; 
     @Builder.Default
-    // Refresh token is typically sent via HttpOnly Cookie
     private String tokenType = "Bearer";
     private Long userId;
     private String email;
@@ -23,10 +22,10 @@ public class AuthResponse {
     private String avatarUrl;
     private List<String> roles;
     
-    // Flag indicating if the user's email is verified
+    // Kiểm tra xem email của user đã được xác thực chưa
     @Builder.Default
     private Boolean verified = true;
     
-    // Optional message for the client
+    // Thông báo tùy chọn cho client
     private String message;
 }

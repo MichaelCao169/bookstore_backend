@@ -25,10 +25,7 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
-    /**
-     * Endpoint để thêm review mới cho sản phẩm.
-     * Yêu cầu người dùng đã đăng nhập.
-     */
+    // Endpoint để thêm review mới cho sản phẩm.
     @PostMapping
     public ResponseEntity<ReviewDTO> addReview(
             @PathVariable UUID productId,
@@ -40,10 +37,7 @@ public class ReviewController {
         return ResponseEntity.ok(reviewDTO);
     }
 
-    /**
-     * Endpoint để lấy tất cả reviews của một sản phẩm.
-     * Không yêu cầu đăng nhập.
-     */
+    // Endpoint để lấy tất cả reviews của một sản phẩm.
     @GetMapping
     public ResponseEntity<Page<ReviewDTO>> getProductReviews(
             @PathVariable UUID productId,
@@ -56,10 +50,7 @@ public class ReviewController {
         return ResponseEntity.ok(reviewPage);
     }
 
-    /**
-     * Endpoint để cập nhật review.
-     * Yêu cầu người dùng đã đăng nhập và chỉ có thể cập nhật review của chính mình.
-     */
+    // Endpoint để cập nhật review.
     @PutMapping("/{reviewId}")
     public ResponseEntity<ReviewDTO> updateReview(
             @PathVariable UUID productId,
@@ -72,10 +63,7 @@ public class ReviewController {
         return ResponseEntity.ok(reviewDTO);
     }
 
-    /**
-     * Endpoint để xóa review.
-     * Yêu cầu người dùng đã đăng nhập và chỉ có thể xóa review của chính mình.
-     */
+    // Endpoint để xóa review.
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<Void> deleteReview(
             @PathVariable UUID productId,

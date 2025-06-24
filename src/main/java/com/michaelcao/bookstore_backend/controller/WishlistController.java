@@ -33,9 +33,7 @@ public class WishlistController {
         throw new IllegalStateException("User not authenticated properly.");
     }
 
-    /**
-     * Endpoint để lấy danh sách sản phẩm yêu thích của người dùng hiện tại.
-     */
+    // Endpoint để lấy danh sách sản phẩm yêu thích của người dùng hiện tại.
     @GetMapping
     public ResponseEntity<WishlistDTO> getMyWishlist() {
         Long userId = getCurrentUserId();
@@ -44,10 +42,7 @@ public class WishlistController {
         return ResponseEntity.ok(wishlist);
     }
 
-    /**
-     * Endpoint để thêm một sản phẩm vào wishlist.
-     * productId được lấy từ path variable.
-     */
+    // Endpoint để thêm một sản phẩm vào wishlist.
     @PostMapping("/products/{productId}")
     public ResponseEntity<Void> addProductToMyWishlist(@PathVariable UUID productId) {
         Long userId = getCurrentUserId();
@@ -58,10 +53,7 @@ public class WishlistController {
         // Hoặc return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Endpoint để xóa một sản phẩm khỏi wishlist.
-     * productId được lấy từ path variable.
-     */
+    // Endpoint để xóa một sản phẩm khỏi wishlist.
     @DeleteMapping("/products/{productId}")
     public ResponseEntity<Void> removeProductFromMyWishlist(@PathVariable UUID productId) {
         Long userId = getCurrentUserId();

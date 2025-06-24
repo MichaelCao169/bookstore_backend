@@ -1,26 +1,19 @@
-// src/main/java/com/michaelcao/bookstore_backend/service/EmailService.java
 package com.michaelcao.bookstore_backend.service;
-
-import jakarta.mail.MessagingException; // Import exception
-import jakarta.mail.internet.MimeMessage; // Import MimeMessage
+import jakarta.mail.MessagingException; 
+import jakarta.mail.internet.MimeMessage; 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value; // Import Value
-import org.springframework.mail.MailException; // Import MailException
-import org.springframework.mail.javamail.JavaMailSender; // Import JavaMailSender
-import org.springframework.mail.javamail.MimeMessageHelper; // Import MimeMessageHelper
-import org.springframework.scheduling.annotation.Async; // Import Async (nếu muốn bất đồng bộ)
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException; 
+import org.springframework.mail.javamail.JavaMailSender; 
+import org.springframework.mail.javamail.MimeMessageHelper; 
 import org.springframework.stereotype.Service;
 import com.michaelcao.bookstore_backend.entity.PasswordResetToken;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.mail.MailException;
-import org.springframework.mail.javamail.MimeMessageHelper;
+
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-// @EnableAsync // Bỏ comment nếu muốn bật @Async
 public class EmailService {
 
     private final JavaMailSender mailSender; // Inject MailSender Bean
@@ -41,7 +34,7 @@ public class EmailService {
 
             helper.setFrom(senderEmail, senderName); // Đặt người gửi
             helper.setTo(recipientEmail); // Đặt người nhận
-            helper.setSubject("Chào mừng đến với AtomicBooks! Xác thực tài khoản của bạn"); // Đặt tiêu đề
+            helper.setSubject("Chào mừng đến với AtomikBooks! Xác thực tài khoản của bạn"); // Đặt tiêu đề
 
             // Tạo nội dung HTML cho email
             String htmlContent = String.format("""

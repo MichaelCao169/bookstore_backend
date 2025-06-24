@@ -11,7 +11,7 @@ public class SendMessageRequest {
     private String content;
     private String messageType = "TEXT"; // TEXT, IMAGE, FILE
     
-    // File-related fields for FILE/IMAGE type messages
+    // File-related fields for FILE/IMAGE type
     private String fileName;
     private String fileUrl;
     private Long fileSize;

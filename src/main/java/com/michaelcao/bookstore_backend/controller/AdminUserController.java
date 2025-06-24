@@ -2,7 +2,6 @@ package com.michaelcao.bookstore_backend.controller;
 
 import com.michaelcao.bookstore_backend.dto.user.UpdateUserStatusRequest;
 import com.michaelcao.bookstore_backend.dto.user.UserManagementDTO;
-// Optional: import UpdateUserRolesRequest;
 import com.michaelcao.bookstore_backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +22,7 @@ public class AdminUserController {
 
     private final UserService userService;
 
-    /**
-     * Endpoint cho Admin lấy danh sách tất cả người dùng (có phân trang và tìm kiếm).
-     */
+    // Endpoint cho Admin lấy danh sách tất cả người dùng (có phân trang và tìm kiếm).
     @GetMapping
     public ResponseEntity<Page<UserManagementDTO>> getAllUsers(
             @RequestParam(required = false) String keyword, // Tham số tìm kiếm (tùy chọn)
@@ -35,9 +32,7 @@ public class AdminUserController {
         return ResponseEntity.ok(userPage);
     }
 
-    /**
-     * Endpoint cho Admin lấy chi tiết một người dùng theo ID.
-     */
+    // Endpoint cho Admin lấy chi tiết một người dùng theo ID.
     @GetMapping("/{userId}")
     public ResponseEntity<UserManagementDTO> getUserById(@PathVariable Long userId) {
         log.info("Admin request: Get user details for ID: {}", userId);
@@ -45,9 +40,7 @@ public class AdminUserController {
         return ResponseEntity.ok(userDTO);
     }
 
-    /**
-     * Endpoint cho Admin cập nhật trạng thái (khóa/mở khóa) tài khoản người dùng.
-     */
+    // Endpoint cho Admin cập nhật trạng thái (khóa/mở khóa) tài khoản người dùng.
     @PutMapping("/{userId}/status")
     public ResponseEntity<UserManagementDTO> updateUserStatus(
             @PathVariable Long userId,
@@ -57,17 +50,5 @@ public class AdminUserController {
         return ResponseEntity.ok(updatedUser);
     }
 
-    /**
-     * (Optional) Endpoint cho Admin cập nhật vai trò người dùng.
-     */
-    /*
-    @PutMapping("/{userId}/roles")
-    public ResponseEntity<UserManagementDTO> updateUserRoles(
-            @PathVariable Long userId,
-            @Valid @RequestBody UpdateUserRolesRequest request) {
-        log.info("Admin request: Update roles for user ID: {} to {}", userId, request.getRoleNames());
-        UserManagementDTO updatedUser = userService.updateUserRoles(userId, request);
-        return ResponseEntity.ok(updatedUser);
-    }
-    */
+    
 }

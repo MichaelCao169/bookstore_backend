@@ -14,9 +14,9 @@ import java.util.Set;     // Import Set
 @Table(name = "categories", uniqueConstraints = {
         @UniqueConstraint(columnNames = "name") // Đảm bảo tên danh mục là duy nhất
 })
-@Getter // Lombok: Chỉ tạo Getters
-@Setter // Lombok: Chỉ tạo Setters
-@NoArgsConstructor // Lombok: Constructor không tham số (cần cho JPA)
+@Getter
+@Setter
+@NoArgsConstructor
 public class Category {
 
     @Id
@@ -42,13 +42,13 @@ public class Category {
     // Dùng Set để tránh trùng lặp Product trong danh sách (mặc dù ít khi xảy ra ở đây).
     private Set<Product> products = new HashSet<>();
 
-    // Constructor với tham số (tùy chọn, hữu ích khi tạo đối tượng)
+    // Constructor với tham số
     public Category(String name, String description) {
         this.name = name;
         this.description = description;
     }
 
-    // Helper methods (tùy chọn) để quản lý quan hệ hai chiều
+    // Helper methods  để quản lý quan hệ hai chiều
     public void addProduct(Product product) {
         this.products.add(product);
         product.setCategory(this);

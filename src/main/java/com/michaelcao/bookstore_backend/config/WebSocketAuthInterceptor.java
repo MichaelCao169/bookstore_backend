@@ -30,7 +30,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-            // Extract JWT token from Authorization header
+            // Lấy JWT token từ header Authorization
             String bearerToken = accessor.getFirstNativeHeader("Authorization");
             log.debug("WebSocket CONNECT - Authorization header: {}", bearerToken);
             
@@ -39,21 +39,21 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                 log.debug("WebSocket CONNECT - Extracted token: {}", token.substring(0, Math.min(20, token.length())) + "...");
                 
                 try {
-                    // Extract username from JWT
+                    // Lấy username từ JWT
                     String username = jwtUtil.extractUsername(token);
                     log.debug("WebSocket CONNECT - Extracted username: {}", username);
                     
                     if (username != null) {
-                        // Load user details
+                        // Tải thông tin user
                         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                         
-                        // Validate token
+                        // Kiểm tra token
                         if (jwtUtil.isTokenValid(token, userDetails)) {
-                            // Create authentication token
+                            // Tạo authentication token
                             Authentication authToken = new UsernamePasswordAuthenticationToken(
                                     userDetails, null, userDetails.getAuthorities());
                             
-                            // Set authentication in accessor
+                                    // Đặt authentication trong accessor
                             accessor.setUser(authToken);
                             SecurityContextHolder.getContext().setAuthentication(authToken);
                             

@@ -8,23 +8,22 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 // DTO này chứa thông tin cần thiết để tạo đơn hàng từ phía client
-// Giả định giỏ hàng được lấy từ user đang đăng nhập, không cần gửi ID giỏ hàng
+//  giỏ hàng được lấy từ user đang đăng nhập, không cần gửi ID giỏ hàng
 @Data
 public class CreateOrderRequest {
 
     // Thông tin địa chỉ giao hàng (Lồng vào và validate)
     @NotNull(message = "Shipping address cannot be null")
-    @Valid // *** QUAN TRỌNG: Validate các trường bên trong Address ***
+    @Valid //  Validate các trường bên trong Address
     private AddressInfo shippingAddress;
 
     @NotNull(message = "Payment method cannot be null")
-    private PaymentMethod paymentMethod; // Client gửi lên phương thức thanh toán họ chọn
+    private PaymentMethod paymentMethod; // Client gửi lên phương thức thanh toán
 
     @Size(max = 500, message = "Notes cannot exceed 500 characters")
     private String notes; // Ghi chú (tùy chọn)
 
-    // --- Lớp nội bộ (inner class) hoặc DTO riêng cho Address ---
-    // Sử dụng lớp nội bộ ở đây cho tiện, hoặc tạo file AddressInfo.java riêng
+    // --- inner class  riêng cho Address ---
     @Data
     public static class AddressInfo {
         @NotBlank(message = "Street address cannot be blank")

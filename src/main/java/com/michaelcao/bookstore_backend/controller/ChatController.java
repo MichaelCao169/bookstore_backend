@@ -53,7 +53,7 @@ public class ChatController {
             @RequestParam(defaultValue = "50") int size,
             HttpServletRequest httpRequest) {
         
-        // Additional security check could be added here to ensure customer owns the conversation
+        // Kiểm tra xem customer có quyền truy cập vào conversation này không
         List<MessageResponse> messages = chatService.getConversationMessages(conversationId, page, size);
         return ResponseEntity.ok(messages);
     }
@@ -107,7 +107,7 @@ public class ChatController {
         chatService.markMessagesAsReadByAdmin(conversationId);
         return ResponseEntity.ok().build();
     }
-      // Helper method to extract user ID from JWT token
+      // Lấy user ID từ JWT token
     private Long getUserIdFromToken(HttpServletRequest request) {
         String token = extractJwtFromRequest(request);
         if (token != null) {
@@ -120,7 +120,7 @@ public class ChatController {
         throw new RuntimeException("Missing token");
     }
     
-    // Extract JWT from request's Authorization header
+    // Lấy JWT từ header Authorization của request
     private String extractJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {

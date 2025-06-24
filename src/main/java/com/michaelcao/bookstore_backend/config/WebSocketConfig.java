@@ -15,7 +15,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final WebSocketAuthInterceptor webSocketAuthInterceptor;    @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        // Register the authentication interceptor for inbound messages
+        // Đăng ký interceptor xác thực cho tin nhắn đến
         registration.interceptors(webSocketAuthInterceptor);
     }
 
@@ -25,16 +25,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // back to the client on destinations prefixed with "/topic"
         config.enableSimpleBroker("/topic");
         
-        // Designate the "/app" prefix for messages that are bound for
+        // Định dạng "/app" cho tin nhắn được gắn vào
         // @MessageMapping-annotated methods
         config.setApplicationDestinationPrefixes("/app");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Register the "/ws" endpoint, enabling SockJS fallback options
+        // Đăng ký endpoint "/ws", bật tùy chọn SockJS fallback
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("http://localhost:3000") // Frontend URL
+                .setAllowedOrigins("http://localhost:3000") 
                 .withSockJS();
     }
 }

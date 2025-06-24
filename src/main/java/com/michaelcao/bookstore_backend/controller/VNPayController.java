@@ -24,9 +24,7 @@ public class VNPayController {
     private final VNPayService vnPayService;
     private final CartService cartService;
     
-    /**
-     * Tạo URL thanh toán VNPay cho đơn hàng
-     */
+    // Tạo URL thanh toán VNPay cho đơn hàng
     @PostMapping("/create-payment/{orderId}")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<VNPayPaymentResponse> createPayment(
@@ -49,10 +47,7 @@ public class VNPayController {
         }
     }
     
-    /**
-     * Xử lý callback từ VNPay sau khi thanh toán
-     * Endpoint này sẽ được VNPay gọi trực tiếp
-     */
+    // Xử lý callback từ VNPay sau khi thanh toán
     @GetMapping("/callback")
     public ResponseEntity<String> handleCallback(
             @RequestParam("vnp_Amount") String vnpAmount,
@@ -92,8 +87,7 @@ public class VNPayController {
         if (success && callback.isSuccessful()) {
             // Xóa giỏ hàng sau khi thanh toán thành công
             try {
-                // Extract user ID from order and clear cart
-                // This is a simplified approach - in production you might want to handle this differently
+                // Lấy user ID từ order và xóa giỏ hàng
                 log.info("Payment successful for transaction: {}", vnpTxnRef);
                 return ResponseEntity.ok("Payment processed successfully");
             } catch (Exception e) {
@@ -106,9 +100,7 @@ public class VNPayController {
         }
     }
     
-    /**
-     * Endpoint để frontend kiểm tra kết quả thanh toán
-     */
+    // Endpoint để frontend kiểm tra kết quả thanh toán
     @GetMapping("/payment-result")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<String> getPaymentResult(
@@ -124,9 +116,7 @@ public class VNPayController {
         }
     }
     
-    /**
-     * Query payment status từ VNPay
-     */
+    // Query payment status từ VNPay
     @GetMapping("/query-status/{transactionRef}")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<String> queryPaymentStatus(@PathVariable String transactionRef) {
@@ -136,9 +126,7 @@ public class VNPayController {
         return ResponseEntity.ok(status);
     }
     
-    /**
-     * Helper method để lấy IP address của client
-     */
+    //  method để lấy IP address của client
     private String getClientIpAddress(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isEmpty() && !"unknown".equalsIgnoreCase(xForwardedFor)) {

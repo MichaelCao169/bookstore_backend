@@ -41,26 +41,26 @@ public class AuthController {
         log.info("Processing login request for email: {}", request.getEmail());
         AuthResponse authResponse = authService.login(request);
         
-        // Check if login was successful
+        // Kiểm tra nếu đăng nhập thành công
         if (authResponse.getVerified() == null || !authResponse.getVerified()) {
-            // Login failed - return 401 Unauthorized with error message
+            // Đăng nhập thất bại - trả về 401 Unauthorized với thông báo lỗi
             log.warn("Login failed for email: {}", request.getEmail());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authResponse);
         }
         
-        // Set refresh token as HttpOnly cookie if login successful
+        // Đặt refresh token làm cookie HttpOnly nếu đăng nhập thành công
         if (authResponse.getRefreshToken() != null) {
             Cookie refreshTokenCookie = new Cookie(refreshTokenCookieName, authResponse.getRefreshToken());
             refreshTokenCookie.setHttpOnly(true);
-            refreshTokenCookie.setSecure(false); // Set to true in production with HTTPS
+            refreshTokenCookie.setSecure(false); // Đặt thành true trong nếu thực tế với HTTPS
             refreshTokenCookie.setPath("/");
-            refreshTokenCookie.setMaxAge((int) (refreshTokenExpirationMs / 1000)); // Convert ms to seconds
+            refreshTokenCookie.setMaxAge((int) (refreshTokenExpirationMs / 1000)); // Chuyển ms sang giây
             response.addCookie(refreshTokenCookie);
             
             log.info("Set refresh token cookie: name='{}', path='/', maxAge={}, httpOnly=true", 
                 refreshTokenCookieName, refreshTokenCookie.getMaxAge());
             
-            // Remove refresh token from response body for security
+            // Xóa refresh token khỏi body response cho bảo mật
             authResponse.setRefreshToken(null);
         }
         
@@ -70,12 +70,12 @@ public class AuthController {
         log.info("Processing logout request");
         authService.logout();
         
-        // Clear refresh token cookie
+        // Xóa refresh token cookie
         Cookie refreshTokenCookie = new Cookie(refreshTokenCookieName, null);
         refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(false); // Set to true in production with HTTPS
+        refreshTokenCookie.setSecure(false); // Đặt thành true trong nếu thực tế với HTTPS
         refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge(0); // Delete cookie
+        refreshTokenCookie.setMaxAge(0); // Xóa cookie
         response.addCookie(refreshTokenCookie);
         
         return ResponseEntity.ok("Logged out successfully");

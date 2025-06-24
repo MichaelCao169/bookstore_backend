@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors; // Import Stream
+import java.util.stream.Collectors;
 
 
 @Component
@@ -38,10 +38,10 @@ public class DataInitializer implements CommandLineRunner {
     private final String adminDefaultName = "Atomik Administrator";
     private final String adminDefaultAvatarUrl = "/default-admin-avatar.png";
 
-    // Additional test user
+    // data test
     private final String testUserEmail = "caomanhtruong1609@gmail.com";
     private final String testUserPassword = "Hihihi123";
-    private final String testUserName = "Cao Manh Truong";
+    private final String testUserName = "Cao Manh Cuong";
     private final String testUserAvatarUrl = "/default-avatar.png";
 
 
@@ -93,7 +93,7 @@ public class DataInitializer implements CommandLineRunner {
         if (!userRepository.existsByEmail(adminDefaultEmail)) {
             Set<Role> adminRolesSet = new HashSet<>();
             adminRolesSet.add(adminRoleEntity);    // Thêm ROLE_ADMIN
-            adminRolesSet.add(customerRoleEntity); // << THÊM ROLE_CUSTOMER
+            adminRolesSet.add(customerRoleEntity); //  THÊM ROLE_CUSTOMER
 
             User adminUser = User.builder()
                     .name(adminDefaultName)
@@ -167,7 +167,7 @@ public class DataInitializer implements CommandLineRunner {
                     .email(testUserEmail)
                     .password(passwordEncoder.encode(testUserPassword))
                     .roles(customerRolesSet)
-                    .enabled(true) // Đặt enabled=true để có thể đăng nhập ngay
+                    .enabled(true) // Đặt enabled=true để có thể kích hoạt ngay
                     .avatarUrl(testUserAvatarUrl)
                     .defaultAddress(createDefaultAddress()) // Thêm địa chỉ mặc định
                     .build();

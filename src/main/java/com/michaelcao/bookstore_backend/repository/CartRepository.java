@@ -46,5 +46,4 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
     @Query("SELECT c FROM Cart c LEFT JOIN FETCH c.cartItems ci LEFT JOIN FETCH ci.product p WHERE c.user.id = :userId")
     Optional<Cart> findByUser_IdWithItemsAndProducts(@Param("userId") Long userId);
 
-    // Bạn có thể thêm các query khác nếu cần
 }
