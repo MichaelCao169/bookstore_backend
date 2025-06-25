@@ -31,7 +31,7 @@ public class SecurityConfig {
             "/api/reset-password/**",
             "/api/test/hello-public",
             "/api/uploads/**",
-            "/ws/**", // WebSocket endpoint
+            "/ws/**", 
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html"

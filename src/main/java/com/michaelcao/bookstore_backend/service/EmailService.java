@@ -42,16 +42,16 @@ public class EmailService {
                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                     <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; border-radius: 5px;">
                         <div style="text-align: center; margin-bottom: 20px;">
-                            <h1 style="color: #f97316;">AtomicBooks</h1>
+                            <h1 style="color: #f97316;">AtomikBooks</h1>
                         </div>
-                        <h2 style="color: #4a5568;">Chào mừng đến với AtomicBooks, %s!</h2>
+                        <h2 style="color: #4a5568;">Chào mừng đến với AtomikBooks, %s!</h2>
                         <p>Cảm ơn bạn đã đăng ký tài khoản. Vui lòng nhấp vào nút bên dưới để xác thực địa chỉ email của bạn:</p>
                         <div style="text-align: center; margin: 30px 0;">
                             <a href="%s" style="background-color: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Xác thực tài khoản</a>
                         </div>
                         <p>Nếu bạn không đăng ký tài khoản này, vui lòng bỏ qua email này.</p>
                         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
-                            <p>Trân trọng,<br/>Đội ngũ AtomicBooks</p>
+                            <p>Trân trọng,<br/>Đội ngũ AtomikBooks</p>
                         </div>
                     </div>
                 </body>
@@ -80,7 +80,7 @@ public class EmailService {
 
             helper.setFrom(senderEmail, senderName);
             helper.setTo(recipientEmail);
-            helper.setSubject("Yêu cầu đặt lại mật khẩu tài khoản AtomicBooks");
+            helper.setSubject("Yêu cầu đặt lại mật khẩu tài khoản AtomikBooks");
 
             // Tạo nội dung HTML tiếng Việt
             String htmlContent = String.format("""
@@ -88,7 +88,7 @@ public class EmailService {
                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                     <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; border-radius: 5px;">
                         <div style="text-align: center; margin-bottom: 20px;">
-                            <h1 style="color: #f97316;">AtomicBooks</h1>
+                            <h1 style="color: #f97316;">AtomikBooks</h1>
                         </div>
                         <h2 style="color: #4a5568;">Yêu cầu đặt lại mật khẩu</h2>
                         <p>Xin chào %s,</p>
@@ -99,7 +99,7 @@ public class EmailService {
                         <p>Liên kết này sẽ hết hạn sau %d phút.</p>
                         <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này hoặc liên hệ với chúng tôi nếu bạn có bất kỳ thắc mắc.</p>
                         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
-                            <p>Trân trọng,<br/>Đội ngũ AtomicBooks</p>
+                            <p>Trân trọng,<br/>Đội ngũ AtomikBooks</p>
                         </div>
                     </div>
                 </body>

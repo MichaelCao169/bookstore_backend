@@ -169,15 +169,27 @@ public class AuthServiceImpl implements AuthService {
     public void verifyEmail(String token) {
         // Find token in database
         VerificationToken verificationToken = tokenRepository.findByToken(token)
-                .orElseThrow(() -> new ResourceNotFoundException("Token", "value", token));
+                .orElseThrow(() -> {
+                    log.warn("Verification attempt with invalid or used token: {}", token);
+                    return new ResourceNotFoundException("Token", "value", token);
+                });
         
         // Check if token is expired
         if (verificationToken.isExpired()) {
+            log.warn("Verification attempt with expired token: {}", token);
             throw new IllegalStateException("Token is expired");
         }
         
-        // Enable user
+        // Get user and check if already enabled
         User user = verificationToken.getUser();
+        if (user.isEnabled()) {
+            // User already verified - clean up token and return success
+            tokenRepository.delete(verificationToken);
+            log.info("Email already verified for user: {} - cleaning up duplicate token", user.getEmail());
+            return;
+        }
+        
+        // Enable user
         user.setEnabled(true);
         userRepository.save(user);
         

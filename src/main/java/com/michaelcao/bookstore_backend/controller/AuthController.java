@@ -5,6 +5,7 @@ import com.michaelcao.bookstore_backend.dto.auth.LoginRequest;
 import com.michaelcao.bookstore_backend.dto.auth.RegisterRequest;
 import com.michaelcao.bookstore_backend.dto.auth.ForgotPasswordRequest;
 import com.michaelcao.bookstore_backend.dto.auth.ResetPasswordRequest;
+import com.michaelcao.bookstore_backend.exception.ResourceNotFoundException;
 import com.michaelcao.bookstore_backend.service.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -83,9 +84,23 @@ public class AuthController {
 
     @GetMapping("/verify-email")
     public ResponseEntity<String> verifyEmail(@RequestParam String token) {
-        log.info("Processing email verification request");
-        authService.verifyEmail(token);
-        return ResponseEntity.ok("Email verified successfully");
+        log.info("Processing email verification request for token: {}", token.substring(0, Math.min(8, token.length())) + "...");
+        try {
+            authService.verifyEmail(token);
+            return ResponseEntity.ok("Email verified successfully");
+        } catch (ResourceNotFoundException e) {
+            log.warn("Email verification failed - token not found: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("Token not found or already used. If you just verified your email, please try logging in.");
+        } catch (IllegalStateException e) {
+            log.warn("Email verification failed - token expired: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Token has expired. Please request a new verification email.");
+        } catch (Exception e) {
+            log.error("Unexpected error during email verification", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("An error occurred during email verification. Please try again later.");
+        }
     }    @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refreshToken(HttpServletRequest request) {
         log.info("Processing token refresh request");
