@@ -79,21 +79,8 @@ public class ProductSpecification {
                 criteriaBuilder.greaterThan(root.get("quantity"), 0);
     }
 
-    /**
-     * (Ví dụ) Tạo Specification để lọc theo tác giả chính xác (không phân biệt hoa thường).
-     */
-    public static Specification<Product> hasAuthor(String author) {
-        return (root, query, criteriaBuilder) -> {
-            if (!StringUtils.hasText(author)) {
-                return criteriaBuilder.conjunction();
-            }
-            // Điều kiện: LOWER(author) = LOWER(?)
-            return criteriaBuilder.equal(criteriaBuilder.lower(root.get("author")), author.toLowerCase().trim());
-        };
-    }
-
     // --- Phương thức kết hợp các Specification ---
-    public static Specification<Product> buildSpecification(String keyword, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, Boolean inStockOnly, String author) {
+    public static Specification<Product> buildSpecification(String keyword, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, Boolean inStockOnly) {
         Specification<Product> spec = Specification.where(null); // Bắt đầu với spec luôn đúng
 
         if (StringUtils.hasText(keyword)) {
@@ -107,9 +94,6 @@ public class ProductSpecification {
         }
         if (inStockOnly != null && inStockOnly) { // Nếu client gửi inStockOnly=true
             spec = spec.and(isAvailable());
-        }
-        if (StringUtils.hasText(author)) {
-            spec = spec.and(hasAuthor(author));
         }
 
         return spec;

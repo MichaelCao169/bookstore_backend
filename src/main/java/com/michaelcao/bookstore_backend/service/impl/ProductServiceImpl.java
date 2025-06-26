@@ -199,11 +199,11 @@ public class ProductServiceImpl implements ProductService {
     }
     @Override
     @Transactional(readOnly = true)
-    public Page<ProductDTO> filterProducts(Long categoryId, String keyword, BigDecimal minPrice, BigDecimal maxPrice, Boolean inStockOnly, String author, Pageable pageable) {
+    public Page<ProductDTO> filterProducts(Long categoryId, String keyword, BigDecimal minPrice, BigDecimal maxPrice, Boolean inStockOnly, Pageable pageable) {
         log.debug("Filtering products with criteria - ..."); // Log đầy đủ
 
         Specification<Product> spec = ProductSpecification.buildSpecification(
-                keyword, categoryId, minPrice, maxPrice, inStockOnly, author
+                keyword, categoryId, minPrice, maxPrice, inStockOnly
         );
         // Query lấy Page<Product>
         Page<Product> productPage = productRepository.findAll(spec, pageable);
@@ -218,7 +218,7 @@ public class ProductServiceImpl implements ProductService {
     public Page<ProductDTO> getProductsByCategory(Long categoryId, Pageable pageable) {
         log.debug("Fetching products for category ID: {} with pagination: {}", categoryId, pageable);
         // Gọi lại filterProducts để tận dụng logic và xử lý stats
-        return filterProducts(categoryId, null, null, null, null, null, pageable);
+        return filterProducts(categoryId, null, null, null, null, pageable);
     }    @Override
     @Transactional
     public ProductDTO updateProduct(UUID id, UpdateProductRequest request) {
@@ -288,7 +288,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public Page<ProductDTO> searchProducts(String keyword, Pageable pageable) {
-        return filterProducts(null, keyword, null, null, null, null, pageable);
+        return filterProducts(null, keyword, null, null, null, pageable);
     }
 
     @Override
@@ -314,42 +314,40 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<String> getAllAuthors() {
-        log.debug("Fetching all unique authors from database");
-        List<String> authors = productRepository.findAllUniqueAuthors();
-        log.debug("Found {} unique authors", authors.size());
-        return authors;
-    }
-
-    @Override
     @Transactional
-    public void recalculateSoldCountForAllProducts() {
-        log.info("Starting recalculation of soldCount for all products");
+    public void recalculateAllSoldCounts() {
+        log.info("Starting recalculation of sold counts for all products");
         
-        // Get all products
-        List<Product> allProducts = productRepository.findAll();
-        log.info("Found {} products to recalculate soldCount", allProducts.size());
-        
-        int updatedCount = 0;
-        for (Product product : allProducts) {
-            // Calculate total sold count from delivered orders
-            Integer totalSold = orderItemRepository.calculateTotalSoldByProductId(product.getProductId());
-            if (totalSold == null) {
-                totalSold = 0;
+        try {
+            // Get all products
+            List<Product> allProducts = productRepository.findAll();
+            log.info("Found {} products to update", allProducts.size());
+            
+            int updatedCount = 0;
+            for (Product product : allProducts) {
+                // Calculate sold count for this product
+                Integer soldCount = orderItemRepository.calculateTotalSoldByProductId(product.getProductId());
+                if (soldCount == null) {
+                    soldCount = 0;
+                }
+                
+                // Update if different
+                if (!soldCount.equals(product.getSoldCount())) {
+                    Integer oldCount = product.getSoldCount();
+                    product.setSoldCount(soldCount);
+                    productRepository.save(product);
+                    updatedCount++;
+                    
+                    log.debug("Updated product {} sold count: {} -> {}", 
+                             product.getTitle(), oldCount, soldCount);
+                }
             }
             
-            // Update if different from current value
-            Integer currentSoldCount = product.getSoldCount() != null ? product.getSoldCount() : 0;
-            if (!currentSoldCount.equals(totalSold)) {
-                product.setSoldCount(totalSold);
-                productRepository.save(product);
-                updatedCount++;
-                log.debug("Updated soldCount for product {} ({}): {} -> {}", 
-                    product.getProductId(), product.getTitle(), currentSoldCount, totalSold);
-            }
+            log.info("Successfully updated sold counts for {} products", updatedCount);
+            
+        } catch (Exception e) {
+            log.error("Error during sold count recalculation", e);
+            throw new RuntimeException("Failed to recalculate sold counts", e);
         }
-        
-        log.info("Completed recalculation of soldCount. Updated {} products", updatedCount);
     }
 }

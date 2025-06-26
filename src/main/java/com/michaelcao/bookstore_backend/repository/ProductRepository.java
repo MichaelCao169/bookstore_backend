@@ -73,13 +73,6 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
            countQuery = "SELECT COUNT(p) FROM Product p")
     Page<Product> findAllWithCategoriesFetched(Pageable pageable);
 
-    /**
-     * Get all unique authors from products
-     * @return List of unique author names ordered alphabetically
-     */
-    @Query("SELECT DISTINCT p.author FROM Product p WHERE p.author IS NOT NULL AND p.author <> '' ORDER BY p.author")
-    List<String> findAllUniqueAuthors();
-
     // *** AI CHATBOT OPTIMIZED QUERIES - PREVENT LAZY INITIALIZATION ***
     
     /**

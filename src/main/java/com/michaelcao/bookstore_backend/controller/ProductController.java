@@ -90,15 +90,14 @@ public class ProductController {
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Boolean inStockOnly,
-            @RequestParam(required = false) String author, // Thêm tham số lọc author
             @PageableDefault(size = 10, sort = "title") Pageable pageable) {
 
-        log.debug("Request received to filter products with criteria - CategoryId: {}, Keyword: '{}', MinPrice: {}, MaxPrice: {}, InStockOnly: {}, Author: '{}', Pageable: {}",
-                categoryId, keyword, minPrice, maxPrice, inStockOnly, author, pageable);
+        log.debug("Request received to filter products with criteria - CategoryId: {}, Keyword: '{}', MinPrice: {}, MaxPrice: {}, InStockOnly: {}, Pageable: {}",
+                categoryId, keyword, minPrice, maxPrice, inStockOnly, pageable);
 
         // Gọi phương thức service đã cập nhật
         Page<ProductDTO> productPage = productService.filterProducts(
-                categoryId, keyword, minPrice, maxPrice, inStockOnly, author, pageable
+                categoryId, keyword, minPrice, maxPrice, inStockOnly, pageable
         );
         return ResponseEntity.ok(productPage);
     }
@@ -150,17 +149,6 @@ public class ProductController {
         log.debug("Request received to get top selling products");
         List<ProductDTO> topProducts = dashboardService.getTopSellingProducts(5);
         return ResponseEntity.ok(topProducts);
-    }
-
-    /**
-     * Get all unique authors from products
-     * @return List of unique author names
-     */
-    @GetMapping("/authors")
-    public ResponseEntity<List<String>> getAllAuthors() {
-        log.debug("Request received to get all authors");
-        List<String> authors = productService.getAllAuthors();
-        return ResponseEntity.ok(authors);
     }
 
     // --- Optional Endpoints ---

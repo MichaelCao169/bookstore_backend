@@ -48,7 +48,7 @@ public class AdminDashboardController {
     public ResponseEntity<Map<String, String>> recalculateSoldCount() {
         log.info("Admin request received to recalculate soldCount for all products");
         try {
-            productService.recalculateSoldCountForAllProducts();
+            productService.recalculateAllSoldCounts();
             Map<String, String> response = new HashMap<>();
             response.put("message", "Successfully recalculated soldCount for all products");
             response.put("status", "success");

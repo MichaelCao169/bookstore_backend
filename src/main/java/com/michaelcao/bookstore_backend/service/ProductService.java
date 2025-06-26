@@ -40,7 +40,6 @@ public interface ProductService {
      * @param minPrice (Optional) Giá tối thiểu.
      * @param maxPrice (Optional) Giá tối đa.
      * @param inStockOnly (Optional) Chỉ lấy sản phẩm còn hàng (true) hay không (null hoặc false).
-     * @param author (Optional) Lọc theo tên tác giả chính xác (không phân biệt hoa thường).
      * @param pageable Thông tin phân trang và sắp xếp.
      * @return Page chứa danh sách ProductDTO thỏa mãn điều kiện.
      */
@@ -50,7 +49,6 @@ public interface ProductService {
                                      BigDecimal minPrice,
                                      BigDecimal maxPrice,
                                      Boolean inStockOnly,
-                                     String author,
                                      Pageable pageable);
     /**
      * Lấy danh sách sản phẩm thuộc một danh mục cụ thể (có phân trang).
@@ -97,14 +95,8 @@ public interface ProductService {
     boolean hasUserPurchasedProduct(Long userId, UUID productId);
 
     /**
-     * Lấy danh sách tất cả tác giả có sản phẩm trong hệ thống
-     * @return List chứa danh sách tên tác giả duy nhất
-     */
-    List<String> getAllAuthors();
-
-    /**
      * Recalculate and update soldCount for all products based on delivered orders
      * This method should be used to initialize or fix soldCount data
      */
-    void recalculateSoldCountForAllProducts();
+    void recalculateAllSoldCounts();
 }

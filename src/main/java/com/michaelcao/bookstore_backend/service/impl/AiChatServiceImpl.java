@@ -52,9 +52,18 @@ public class AiChatServiceImpl implements AiChatService {
     public String getAiResponse(String userQuery) {
         log.info("AI Chat: Processing query: '{}'", userQuery);
 
-        // 1. Enhanced Retrieval: Tìm kiếm các sản phẩm liên quan với multiple strategies
-        List<Product> relevantProducts = findRelevantProducts(userQuery);
-        log.info("AI Chat: Found {} relevant products", relevantProducts.size());
+        // *** BƯỚC MỚI: TRÍCH XUẤT TỪ KHÓA BẰNG AI ***
+        String searchKeywords = extractKeywordsFromQuery(userQuery);
+        
+        // Nếu không trích xuất được từ khóa, dùng câu gốc (fallback)
+        if (searchKeywords.isEmpty()) {
+            searchKeywords = userQuery;
+            log.warn("Could not extract specific keywords, using original query for search.");
+        }
+
+        // 1. Enhanced Retrieval: Tìm kiếm các sản phẩm liên quan với keywords đã trích xuất
+        List<Product> relevantProducts = findRelevantProducts(searchKeywords);
+        log.info("AI Chat: Found {} relevant products for keywords '{}'", relevantProducts.size(), searchKeywords);
         
         // 2. Augmentation: Tạo ngữ cảnh từ dữ liệu sách
         String bookContext = buildBookContext(relevantProducts);
@@ -99,6 +108,46 @@ public class AiChatServiceImpl implements AiChatService {
             log.error("AI Chat: Error calling OpenAI API", e);
             return "Xin lỗi, tôi đang gặp một sự cố kỹ thuật. Vui lòng thử lại sau.";
         }
+    }
+
+    /**
+     * Trích xuất từ khóa quan trọng từ câu hỏi của người dùng bằng OpenAI
+     */
+    private String extractKeywordsFromQuery(String userQuery) {
+        // Một prompt chuyên để trích xuất thông tin
+        String extractionPrompt = String.format(
+            "Phân tích câu hỏi sau và trích xuất TÊN TÁC GIẢ hoặc TÊN SÁCH cụ thể để tìm kiếm trong cơ sở dữ liệu. " +
+            "\n\nCÁCH TRÍCH XUẤT:" +
+            "\n- Nếu có tên tác giả (VD: Nguyễn Nhật Ánh, Nguyễn Nhật Anh): trả về chính xác tên tác giả" +
+            "\n- Nếu có tên sách (VD: Tôi thấy hoa vàng trên cỏ xanh): trả về chính xác tên sách" +
+            "\n- Nếu có cả hai: ưu tiên tên tác giả" +
+            "\n- Nếu không có tên cụ thể: trích xuất từ khóa chính (VD: 'tiểu thuyết', 'truyện ngắn')" +
+            "\n\nQUAN TRỌNG: CHỈ trả về kết quả trích xuất, KHÔNG giải thích hay thêm từ gì khác." +
+            "\n\nCâu hỏi: \"%s\"" +
+            "\nKết quả trích xuất:", userQuery
+        );
+
+        try {
+            ChatCompletionCreateParams request = ChatCompletionCreateParams.builder()
+                    .model("gpt-4o-mini")
+                    .addSystemMessage("Bạn là chuyên gia trích xuất thông tin. Chỉ trả về kết quả trích xuất, không giải thích.")
+                    .addUserMessage(extractionPrompt)
+                    .maxTokens(50) // Giới hạn token vì chỉ cần lấy tên/từ khóa
+                    .temperature(0.0) // Temperature = 0 để kết quả nhất quán
+                    .build();
+
+            ChatCompletion response = openAIClient.chat().completions().create(request);
+
+            if (response != null && !response.choices().isEmpty()) {
+                String extractedKeywords = response.choices().get(0).message().content().orElse("").trim();
+                log.info("🔍 AI Extraction - Input: '{}' => Output: '{}'", userQuery, extractedKeywords);
+                // Xóa dấu nháy kép và ký tự thừa nếu có
+                return extractedKeywords.replace("\"", "").replace("'", "").trim();
+            }
+        } catch (Exception e) {
+            log.error("❌ Error extracting keywords from query: '{}'", userQuery, e);
+        }
+        return ""; // Trả về chuỗi rỗng nếu có lỗi
     }
 
     /**
