@@ -61,4 +61,13 @@ public class WishlistController {
         wishlistService.removeProductFromWishlist(userId, productId);
         return ResponseEntity.noContent().build(); // Trả về 204 No Content
     }
+
+    // Endpoint để xóa toàn bộ wishlist của người dùng.
+    @DeleteMapping
+    public ResponseEntity<Void> clearMyWishlist() {
+        Long userId = getCurrentUserId();
+        log.info("Request received to clear wishlist for user ID: {}", userId);
+        wishlistService.clearWishlist(userId);
+        return ResponseEntity.noContent().build(); // Trả về 204 No Content
+    }
 }

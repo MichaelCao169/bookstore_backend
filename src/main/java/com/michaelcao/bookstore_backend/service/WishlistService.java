@@ -30,4 +30,11 @@ public interface WishlistService {
      * @throws com.michaelcao.bookstore_backend.exception.ResourceNotFoundException Nếu user hoặc product không tồn tại, hoặc sản phẩm không có trong wishlist.
      */
     void removeProductFromWishlist(Long userId, UUID productId);
+
+    /**
+     * Xóa toàn bộ danh sách yêu thích của người dùng.
+     * @param userId ID của người dùng.
+     * @throws com.michaelcao.bookstore_backend.exception.ResourceNotFoundException Nếu user không tồn tại.
+     */
+    void clearWishlist(Long userId);
 }

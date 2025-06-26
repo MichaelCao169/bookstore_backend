@@ -34,14 +34,15 @@ public class DashboardServiceImpl implements DashboardService {
             // Count total products
             long totalProducts = productRepository.count();
             
-            // Count total orders
-            long totalOrders = orderRepository.count();
+            // Count total valid orders (excluding cancelled and failed orders)
+            long totalOrders = orderRepository.countValidOrders() != null 
+                ? orderRepository.countValidOrders() 
+                : 0L;
             
             // Count total users
             long totalUsers = userRepository.count();
             
-            // Get total revenue - using a simple count for now
-            // In a real app, you might want to sum completed orders only
+            // Get total revenue from completed orders only (excluding cancelled and failed orders)
             BigDecimal totalRevenue = orderRepository.getTotalRevenue() != null 
                 ? orderRepository.getTotalRevenue() 
                 : BigDecimal.ZERO;

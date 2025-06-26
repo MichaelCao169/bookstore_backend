@@ -17,11 +17,18 @@ import java.util.UUID;
 public interface OrderRepository extends JpaRepository<Order, UUID> { // Entity: Order, ID: UUID
 
     /**
-     * Calculate the total revenue from all orders
+     * Calculate the total revenue from completed orders only (excluding cancelled and failed orders)
      * @return BigDecimal total revenue
      */
-    @Query("SELECT SUM(o.totalAmount) FROM Order o")
+    @Query("SELECT SUM(o.totalAmount) FROM Order o WHERE o.status NOT IN ('CANCELLED', 'PAYMENT_FAILED')")
     BigDecimal getTotalRevenue();
+
+    /**
+     * Count total valid orders (excluding cancelled and failed orders)
+     * @return Long count of valid orders
+     */
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.status NOT IN ('CANCELLED', 'PAYMENT_FAILED')")
+    Long countValidOrders();
 
     /**
      * Tìm các đơn hàng của một User ID cụ thể, sắp xếp theo ngày đặt hàng giảm dần.

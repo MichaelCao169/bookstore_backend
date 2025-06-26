@@ -107,4 +107,23 @@ public class WishlistServiceImpl implements WishlistService {
         userRepository.save(user);
         log.info("Product ID {} removed from wishlist for user ID {}", productId, userId);
     }
+
+    @Override
+    @Transactional // Cần Transaction để cập nhật User
+    public void clearWishlist(Long userId) {
+        log.info("Attempting to clear wishlist for user ID {}", userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "ID", userId));
+
+        if (!user.getWishlistItems().isEmpty()) {
+            // Xóa tất cả sản phẩm khỏi wishlist
+            user.getWishlistItems().clear();
+            
+            // Lưu lại User, JPA sẽ xóa tất cả bản ghi tương ứng trong bảng join
+            userRepository.save(user);
+            log.info("Wishlist cleared successfully for user ID {}", userId);
+        } else {
+            log.info("Wishlist for user ID {} was already empty", userId);
+        }
+    }
 }
