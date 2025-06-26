@@ -13,8 +13,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-// Import CORS configurer if needed
-import org.springframework.web.cors.CorsConfigurationSource;
+
 
 
 @Configuration

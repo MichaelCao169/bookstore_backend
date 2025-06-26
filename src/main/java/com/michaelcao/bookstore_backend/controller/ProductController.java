@@ -11,16 +11,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -36,19 +32,6 @@ public class ProductController {
 
     private final ProductService productService;
     private final DashboardService dashboardService;
-
-    // *** THÊM LẠI PHƯƠNG THỨC HELPER NÀY ***
-    private Long getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof User) {
-            User currentUser = (User) authentication.getPrincipal();
-            return currentUser.getId();
-        }
-        log.warn("Could not get current user ID from Security Context.");
-        // Trả về null hoặc ném lỗi tùy logic xử lý mong muốn ở nơi gọi
-        return null;
-        // Hoặc: throw new IllegalStateException("User not authenticated properly.");
-    }
 
     // --- Admin Endpoints ---
     @PostMapping("/admin")
@@ -78,7 +61,7 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable UUID id) {
         log.debug("Public request received to get product ID: {}", id);
-        // Sửa lại: Chỉ gọi 1 lần
+        
         ProductDTO product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
@@ -123,7 +106,7 @@ public class ProductController {
 
     /**
      * Kiểm tra xem người dùng hiện tại đã mua sản phẩm và đã nhận hàng thành công chưa
-     * Endpoint này hỗ trợ tính năng chỉ cho phép đánh giá sản phẩm sau khi đã mua và nhận hàng
+     * Endpoint này để implement tính năng chỉ cho phép đánh giá sản phẩm sau khi đã mua và nhận hàng
      */
     @GetMapping("/{productId}/verify-purchase")
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -151,5 +134,5 @@ public class ProductController {
         return ResponseEntity.ok(topProducts);
     }
 
-    // --- Optional Endpoints ---
+    
 }

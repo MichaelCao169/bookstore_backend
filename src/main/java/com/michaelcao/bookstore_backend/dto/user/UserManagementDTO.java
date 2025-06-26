@@ -3,8 +3,8 @@ package com.michaelcao.bookstore_backend.dto.user;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List; // Import List
-import java.util.Set; // Import Set
+
+import java.util.Set; 
 
 @Data
 @NoArgsConstructor

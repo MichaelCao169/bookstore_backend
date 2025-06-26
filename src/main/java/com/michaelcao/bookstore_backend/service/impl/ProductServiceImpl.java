@@ -279,9 +279,7 @@ public class ProductServiceImpl implements ProductService {
             log.warn("Product deletion failed: Product not found with ID: {}", id);
             throw new ResourceNotFoundException("Product", "ID", id);
         }
-        // TODO: Cần kiểm tra xem sản phẩm có nằm trong đơn hàng nào không trước khi xóa? (Logic phức tạp hơn)
-        // Nếu có ràng buộc khóa ngoại từ OrderItem đến Product, DB sẽ tự chặn xóa.
-        // Nếu không, cần kiểm tra thủ công.
+
         productRepository.deleteById(id);
         log.info("Product deleted successfully with ID: {}", id);
     }

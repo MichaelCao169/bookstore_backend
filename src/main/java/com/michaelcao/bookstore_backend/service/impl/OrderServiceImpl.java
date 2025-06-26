@@ -37,8 +37,8 @@ public class OrderServiceImpl implements OrderService {
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final CartService cartService;
-    private final CartItemRepository cartItemRepository;
-    // --- Helper method: Map Order entity sang OrderDTO ---
+
+        // --- Helper method: Map Order entity sang OrderDTO ---
 // Đảm bảo hàm này xử lý trường hợp user/items có thể được fetch sẵn
     private OrderDTO mapToOrderDTO(Order order) {
         OrderDTO dto = new OrderDTO();

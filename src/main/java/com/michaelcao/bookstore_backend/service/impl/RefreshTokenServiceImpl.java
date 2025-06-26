@@ -80,9 +80,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         return ResponseCookie.from(refreshTokenCookieName, token)
                 .path("/") // Cookie available for all paths
                 .maxAge(Duration.ofMillis(refreshTokenDurationMs)) // Thời gian sống của cookie = thời gian sống token
-                .httpOnly(true)   // Quan trọng: Ngăn JS truy cập cookie
-                .secure(false)    // TODO: Set true nếu dùng HTTPS trong production
-                .sameSite("Lax") // Hoặc "Strict" - Giúp chống CSRF. "None" nếu FE/BE khác site hoàn toàn và dùng HTTPS
+                .httpOnly(true)   // Quan trọng: Ngăn JS truy cập cookie để tấn công xss
+                .secure(false)    //  Set true nếu dùng HTTPS trong production
+                .sameSite("Lax") // có theerr là "Strict" - Giúp chống CSRF
                 .build();
     }
 

@@ -116,8 +116,6 @@ public class EmailService {
             // throw new RuntimeException("Failed to send email", e);
         }
     }
-    // --- TODO: Implement sendPasswordResetEmail method ---
-    // @Async
-    // public void sendPasswordResetEmail(String recipientEmail, String recipientName, String resetUrl) { ... }
+   
 
 }

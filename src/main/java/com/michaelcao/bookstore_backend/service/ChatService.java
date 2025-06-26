@@ -9,7 +9,6 @@ import com.michaelcao.bookstore_backend.entity.User;
 import com.michaelcao.bookstore_backend.repository.ConversationRepository;
 import com.michaelcao.bookstore_backend.repository.MessageRepository;
 import com.michaelcao.bookstore_backend.repository.UserRepository;
-import com.michaelcao.bookstore_backend.service.OnlineUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

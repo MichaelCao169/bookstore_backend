@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -52,7 +51,7 @@ public class AiChatServiceImpl implements AiChatService {
     public String getAiResponse(String userQuery) {
         log.info("AI Chat: Processing query: '{}'", userQuery);
 
-        // *** BƯỚC MỚI: TRÍCH XUẤT TỪ KHÓA BẰNG AI ***
+        //  TRÍCH XUẤT TỪ KHÓA BẰNG AI
         String searchKeywords = extractKeywordsFromQuery(userQuery);
         
         // Nếu không trích xuất được từ khóa, dùng câu gốc (fallback)
@@ -89,7 +88,7 @@ public class AiChatServiceImpl implements AiChatService {
                     .model("gpt-4o-mini")
                     .addSystemMessage(systemPrompt)
                     .addUserMessage(userPrompt)
-                    .maxTokens(300)
+                    .maxCompletionTokens(300)
                     .temperature(0.5)
                     .build();
 
@@ -132,7 +131,7 @@ public class AiChatServiceImpl implements AiChatService {
                     .model("gpt-4o-mini")
                     .addSystemMessage("Bạn là chuyên gia trích xuất thông tin. Chỉ trả về kết quả trích xuất, không giải thích.")
                     .addUserMessage(extractionPrompt)
-                    .maxTokens(50) // Giới hạn token vì chỉ cần lấy tên/từ khóa
+                    .maxCompletionTokens(50) // Giới hạn token vì chỉ cần lấy tên/từ khóa
                     .temperature(0.0) // Temperature = 0 để kết quả nhất quán
                     .build();
 
@@ -150,14 +149,12 @@ public class AiChatServiceImpl implements AiChatService {
         return ""; // Trả về chuỗi rỗng nếu có lỗi
     }
 
-    /**
-     * Enhanced search method with multiple strategies
-     */
+    // Tìm kiếm theo nhiều phương pháp
     private List<Product> findRelevantProducts(String userQuery) {
         String normalizedQuery = normalizeVietnameseText(userQuery);
         log.info("AI Chat: Original query: '{}', Normalized: '{}'", userQuery, normalizedQuery);
         
-        // Extract important keywords from the query
+        // Lấy ra các keywork quan trọng
         List<String> keywords = extractKeywords(normalizedQuery);
         log.info("AI Chat: Extracted keywords: {}", keywords);
         

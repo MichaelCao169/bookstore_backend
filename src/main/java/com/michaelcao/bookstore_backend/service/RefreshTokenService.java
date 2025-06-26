@@ -2,7 +2,6 @@
 package com.michaelcao.bookstore_backend.service;
 
 import com.michaelcao.bookstore_backend.entity.RefreshToken;
-import com.michaelcao.bookstore_backend.entity.User;
 import org.springframework.http.ResponseCookie; // For creating the cookie
 
 import java.util.Optional;

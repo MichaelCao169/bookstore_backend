@@ -1,17 +1,16 @@
 package com.michaelcao.bookstore_backend.repository;
 
 import com.michaelcao.bookstore_backend.entity.Order;
-import com.michaelcao.bookstore_backend.entity.OrderStatus; // Import Enum nếu cần dùng trong query
-import com.michaelcao.bookstore_backend.entity.User;
-import org.springframework.data.domain.Page; // Import Page
-import org.springframework.data.domain.Pageable; // Import Pageable
+import com.michaelcao.bookstore_backend.entity.OrderStatus; 
+import org.springframework.data.domain.Page; 
+import org.springframework.data.domain.Pageable; 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query; // Import Query
-import org.springframework.data.repository.query.Param; // Import Param
+import org.springframework.data.jpa.repository.Query; 
+import org.springframework.data.repository.query.Param; 
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
-import java.util.Optional; // Import Optional
+import java.util.Optional; 
 import java.util.UUID;
 
 @Repository

@@ -6,7 +6,6 @@ import com.michaelcao.bookstore_backend.dto.product.UpdateProductRequest;
 import org.springframework.data.domain.Page; // Import Page
 import org.springframework.data.domain.Pageable; // Import Pageable
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 public interface ProductService {

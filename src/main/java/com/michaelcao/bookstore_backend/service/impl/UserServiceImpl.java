@@ -112,10 +112,8 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         log.info("Password changed successfully for user ID: {}", userId);
 
-        // TODO: Nên vô hiệu hóa các Refresh Token cũ của user này sau khi đổi mật khẩu
-        // refreshTokenService.deleteByUserId(userId);
-        // log.info("Old refresh tokens invalidated for user ID: {}", userId);
-    }    // --- Implement updateProfile ---
+
+    }    //  Implement updateProfile 
     @Override
     @Transactional
     public UserProfileDTO updateProfile(Long userId, UpdateProfileRequest request) {
@@ -196,22 +194,13 @@ public class UserServiceImpl implements UserService {
                     return new ResourceNotFoundException("User", "ID", userId);
                 });
 
-        // TODO: Có thể thêm kiểm tra không cho phép admin tự khóa chính mình?
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // User adminUser = (User) auth.getPrincipal();
-        // if (user.getId().equals(adminUser.getId()) && !request.getEnabled()) {
-        //    throw new OperationNotAllowedException("Admin cannot disable their own account.");
-        // }
+
 
         user.setEnabled(request.getEnabled());
         User updatedUser = userRepository.save(user);
         log.info("User status updated successfully for user ID: {}", userId);
 
-        // TODO: Nếu khóa user (enabled=false), nên xóa hết Refresh Token của họ
-        // if (!updatedUser.isEnabled()) {
-        //     refreshTokenService.deleteByUserId(userId);
-        //     log.info("Refresh tokens invalidated for disabled user ID: {}", userId);
-        // }
+
 
         // Mapping sẽ gây N+1 query lấy roles nếu roles là LAZY
         return mapToUserManagementDTO(updatedUser);

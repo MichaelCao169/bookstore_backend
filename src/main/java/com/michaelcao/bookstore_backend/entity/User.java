@@ -35,7 +35,10 @@ public class User implements UserDetails {
     private String password; // Hashed password
 
     @Column(name = "is_enabled", nullable = false)
+    @Builder.Default
     private boolean enabled = false; // Mặc định là false, cần xác thực email
+    
+    @Builder.Default
     private String avatarUrl = "/default-avatar.png"; // Mặc định có ảnh đại diện
 
     @Column(name = "display_name")

@@ -3,7 +3,6 @@ package com.michaelcao.bookstore_backend.controller;
 import com.michaelcao.bookstore_backend.dto.payment.VNPayCallbackRequest;
 import com.michaelcao.bookstore_backend.dto.payment.VNPayPaymentRequest;
 import com.michaelcao.bookstore_backend.dto.payment.VNPayPaymentResponse;
-import com.michaelcao.bookstore_backend.service.CartService;
 import com.michaelcao.bookstore_backend.service.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -22,7 +21,7 @@ import java.util.UUID;
 public class VNPayController {
     
     private final VNPayService vnPayService;
-    private final CartService cartService;
+    
     
     // Tạo URL thanh toán VNPay cho đơn hàng
     @PostMapping("/create-payment/{orderId}")
