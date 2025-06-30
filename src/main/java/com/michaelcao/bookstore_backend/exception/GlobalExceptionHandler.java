@@ -8,13 +8,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest; // Added for more context
+import org.springframework.web.context.request.WebRequest;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
-@Slf4j // Added for logging
+@Slf4j 
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -31,10 +31,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
-    // Response status is set by the exception annotation itself
     public ResponseEntity<String> handleEmailAlreadyExists(EmailAlreadyExistsException ex, WebRequest request) {
         log.warn("Email already exists conflict: {}", ex.getMessage());
-        // You can return a structured error object if preferred
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
@@ -44,29 +42,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
-    // *** THÊM HANDLER CHO DuplicateResourceException ***
     @ExceptionHandler(DuplicateResourceException.class)
-    // @ResponseStatus đã được đặt trong Exception class
     public ResponseEntity<String> handleDuplicateResource(DuplicateResourceException ex, WebRequest request) {
         log.warn("Duplicate resource conflict: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
-    // *** THÊM HANDLER CHO OperationNotAllowedException ***
     @ExceptionHandler(OperationNotAllowedException.class)
-    // @ResponseStatus đã được đặt trong Exception class
     public ResponseEntity<String> handleOperationNotAllowed(OperationNotAllowedException ex, WebRequest request) {
         log.warn("Operation not allowed: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }    // *** THÊM HANDLER CHO InvalidTokenException *** (Từ bước trước)
+    }   
     @ExceptionHandler(InvalidTokenException.class)
-    // @ResponseStatus đã được đặt trong Exception class
     public ResponseEntity<String> handleInvalidToken(InvalidTokenException ex, WebRequest request) {
         log.warn("Invalid token encountered: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
-    // *** THÊM HANDLER CHO Authentication Exceptions ***
     @ExceptionHandler({
         org.springframework.security.authentication.BadCredentialsException.class,
         org.springframework.security.authentication.InternalAuthenticationServiceException.class,
@@ -92,11 +84,10 @@ public class GlobalExceptionHandler {
                 .body("Tài khoản đã bị tạm khóa do đăng nhập sai nhiều lần");
     }
 
-    // Catch-all for other unexpected RuntimeExceptions
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<String> handleGenericRuntimeException(RuntimeException ex, WebRequest request) {
-        log.error("Unexpected internal server error: ", ex); // Log the full stack trace
+        log.error("Unexpected internal server error: ", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Đã xảy ra lỗi hệ thống. Vui lòng liên hệ hỗ trợ.");
     }

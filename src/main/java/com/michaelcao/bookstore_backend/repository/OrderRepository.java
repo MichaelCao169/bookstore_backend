@@ -14,17 +14,17 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order, UUID> { // Entity: Order, ID: UUID
+public interface OrderRepository extends JpaRepository<Order, UUID> { 
 
     /**
-     * Calculate the total revenue from completed orders only (excluding cancelled and failed orders)
+     * Tính tổng doanh thu từ các đơn hàng đã hoàn thành (không bao gồm đơn hàng bị hủy và đơn hàng thất bại)
      * @return BigDecimal total revenue
      */
     @Query("SELECT SUM(o.totalAmount) FROM Order o WHERE o.status NOT IN ('CANCELLED', 'PAYMENT_FAILED')")
     BigDecimal getTotalRevenue();
 
     /**
-     * Count total valid orders (excluding cancelled and failed orders)
+     * Đếm tổng số đơn hàng hợp lệ (không bao gồm đơn hàng bị hủy và đơn hàng thất bại)
      * @return Long count of valid orders
      */
     @Query("SELECT COUNT(o) FROM Order o WHERE o.status NOT IN ('CANCELLED', 'PAYMENT_FAILED')")
@@ -84,9 +84,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> { // Entity:
     Page<Order> findByUserIdWithUserOrderByOrderDateDesc(@Param("userId") Long userId, Pageable pageable);
 
 
-    // Bạn có thể thêm các phương thức khác dựa trên nhu cầu
-    // Ví dụ: tìm đơn hàng theo trạng thái
-    // Page<Order> findByStatus(OrderStatus status, Pageable pageable);
+   
 
     /**
      * Kiểm tra xem có tồn tại ít nhất một đơn hàng của user
@@ -102,19 +100,9 @@ public interface OrderRepository extends JpaRepository<Order, UUID> { // Entity:
             @Param("status") OrderStatus status // Truyền vào OrderStatus.DELIVERED
     );
 
-    // Hoặc cách đơn giản hơn nếu chỉ cần biết user có từng đặt hàng sản phẩm đó (không cần biết trạng thái)
-    // @Query("SELECT COUNT(o.id) > 0 FROM Order o JOIN o.orderItems oi WHERE o.user.id = :userId AND oi.product.productId = :productId")
-    // boolean existsByUserIdAndItemsProductId(@Param("userId") Long userId, @Param("productId") Long productId);
-
+   
 }
 
-// *** Ghi chú quan trọng về Query trên: ***
-// Cách implement hàm checkIfUserPurchasedProduct bằng query trực tiếp trên OrderRepository như trên
-// có thể không phải là cách tối ưu nhất nếu user có RẤT NHIỀU đơn hàng.
-// Một cách tiếp cận khác có thể là tạo một bảng riêng `user_purchased_products`
-// được cập nhật khi đơn hàng chuyển sang trạng thái DELIVERED,
-// và chỉ cần query trên bảng đó sẽ nhanh hơn nhiều.
-// Tuy nhiên, với lượng đơn hàng vừa phải, query trên là đủ dùng.
-// Chúng ta sẽ cần truyền OrderStatus.DELIVERED vào khi gọi hàm này.
+
 
 

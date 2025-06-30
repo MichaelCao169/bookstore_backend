@@ -15,7 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*; 
 
 @RestController
-@RequestMapping("/api/cart") // Base path cho tất cả API giỏ hàng
+@RequestMapping("/api/cart") 
 @RequiredArgsConstructor
 @Slf4j
 @PreAuthorize("hasRole('CUSTOMER')") 
@@ -23,7 +23,7 @@ public class CartController {
 
     private final CartService cartService;
 
-    // Helper method để lấy User ID từ Security Context
+    //  method hỗ trợ để lấy User ID từ Security Context
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof User)) {

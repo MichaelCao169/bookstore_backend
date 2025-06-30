@@ -1,6 +1,6 @@
 package com.michaelcao.bookstore_backend.service.impl;
 
-import com.michaelcao.bookstore_backend.dto.product.ProductSummaryDTO; // Import DTO tóm tắt
+import com.michaelcao.bookstore_backend.dto.product.ProductSummaryDTO; 
 import com.michaelcao.bookstore_backend.dto.wishlist.WishlistDTO;
 import com.michaelcao.bookstore_backend.entity.Product;
 import com.michaelcao.bookstore_backend.entity.User;
@@ -12,7 +12,7 @@ import com.michaelcao.bookstore_backend.service.WishlistService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Cần Transactional
+import org.springframework.transaction.annotation.Transactional; 
 
 import java.util.List;
 import java.util.UUID;

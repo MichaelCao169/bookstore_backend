@@ -6,7 +6,7 @@ import com.michaelcao.bookstore_backend.entity.*;
 import com.michaelcao.bookstore_backend.exception.DuplicateResourceException;
 import com.michaelcao.bookstore_backend.exception.OperationNotAllowedException;
 import com.michaelcao.bookstore_backend.exception.ResourceNotFoundException;
-import com.michaelcao.bookstore_backend.repository.OrderRepository; // Import OrderRepository
+import com.michaelcao.bookstore_backend.repository.OrderRepository;         
 import com.michaelcao.bookstore_backend.repository.ProductRepository;
 import com.michaelcao.bookstore_backend.repository.ReviewRepository;
 import com.michaelcao.bookstore_backend.repository.UserRepository;
@@ -28,7 +28,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
-    private final OrderRepository orderRepository; // Inject để kiểm tra lịch sử mua hàng
+    private final OrderRepository orderRepository;  
 
     // --- Helper method: Map Review entity sang ReviewDTO ---
     private ReviewDTO mapToReviewDTO(Review review) {
@@ -71,13 +71,11 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         // 3. *** KIỂM TRA ĐIỀU KIỆN MUA HÀNG (QUAN TRỌNG) ***
-        // Bỏ comment dòng này nếu bạn muốn bắt buộc user phải mua hàng trước khi đánh giá
 
         if (!checkIfUserPurchasedProduct(userId, productId)) {
             log.warn("User ID {} attempted to review product ID {} without purchasing and receiving it.", userId, productId);
             throw new OperationNotAllowedException("You can only review products you have purchased and received.");
         }
-        // Nếu không cần kiểm tra mua hàng, hãy comment lại đoạn trên.
 
         // 4. Tạo đối tượng Review mới
         Review review = new Review();

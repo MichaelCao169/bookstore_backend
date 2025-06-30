@@ -4,26 +4,26 @@ import com.michaelcao.bookstore_backend.dto.order.CreateOrderRequest;
 import com.michaelcao.bookstore_backend.dto.order.OrderDTO;
 import com.michaelcao.bookstore_backend.dto.order.OrderItemDTO;
 import com.michaelcao.bookstore_backend.dto.order.UpdateOrderStatusRequest;
-import com.michaelcao.bookstore_backend.entity.*; // Import các entity cần thiết (Order, OrderItem, User, Cart, CartItem, Product, Address, OrderStatus, PaymentMethod)
+import com.michaelcao.bookstore_backend.entity.*; 
 import com.michaelcao.bookstore_backend.exception.OperationNotAllowedException;
 import com.michaelcao.bookstore_backend.exception.ResourceNotFoundException;
-import com.michaelcao.bookstore_backend.repository.*; // Import các repository (Order, OrderItem, User, Cart, CartItem, Product)
-import com.michaelcao.bookstore_backend.service.CartService; // Import CartService để xóa giỏ hàng
+import com.michaelcao.bookstore_backend.repository.*; 
+import com.michaelcao.bookstore_backend.service.CartService; 
 import com.michaelcao.bookstore_backend.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // QUAN TRỌNG cho createOrder
-import com.michaelcao.bookstore_backend.entity.OrderStatus; // Import Enum
+import org.springframework.transaction.annotation.Transactional; 
+import com.michaelcao.bookstore_backend.entity.OrderStatus; 
 import java.math.BigDecimal;
-import java.util.HashSet; // Import HashSet
-import java.util.Set;     // Import Set
+import java.util.HashSet; 
+import java.util.Set;     
 import java.util.stream.Collectors;
-import java.util.Collections; // Import Collections
-import java.util.List;        // Import List
-import java.util.Map;         // Import Map
+import java.util.Collections; 
+import java.util.List;        
+import java.util.Map;         
 import java.util.UUID;
 
 @Service
@@ -49,7 +49,7 @@ public class OrderServiceImpl implements OrderService {
             dto.setUserName(order.getUser().getName());
             dto.setUserEmail(order.getUser().getEmail());
         } else {
-            log.warn("User is null for Order ID: {}", order.getId()); // Should not happen with FETCH
+            log.warn("User is null for Order ID: {}", order.getId()); 
         }
         dto.setOrderDate(order.getOrderDate());
         dto.setTotalAmount(order.getTotalAmount());
@@ -78,7 +78,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     // --- Helper method: Map OrderItem entity sang OrderItemDTO ---
-    // Đảm bảo hàm này xử lý product đã được fetch sẵn
     private OrderItemDTO mapToOrderItemDTO(OrderItem item) {
         // Product đã được fetch cùng OrderItem trong findByIdWithDetails
         if (item.getProduct() == null) {
@@ -182,8 +181,7 @@ public class OrderServiceImpl implements OrderService {
         } else {
             // Các phương thức thanh toán online khác (VNPAY,...)
             order.setStatus(OrderStatus.PENDING_PAYMENT); // Chờ thanh toán
-            // *** Logic gọi VNPayService.createPaymentUrl() sẽ nằm ở đây nếu là VNPAY ***
-            // Hiện tại chỉ lưu đơn hàng chờ thanh toán.
+            
         }
 
         // 7. Lưu Order (sẽ cascade lưu OrderItems và cập nhật Product stock)
@@ -227,12 +225,7 @@ public class OrderServiceImpl implements OrderService {
                     .collect(Collectors.groupingBy(item -> item.getOrder().getId()));
 
             // 4. Gắn các OrderItem vào đối tượng Order tương ứng
-            // Lưu ý: Collection orderItems trong Order entity có thể là unmodifiable proxy
-            // nếu không được fetch. Chúng ta cần cách để set lại hoặc dùng DTO.
-            // Cách an toàn hơn là không sửa đổi trực tiếp collection của Entity mà
-            // tạo DTO và set list items vào DTO.
-            // Tuy nhiên, chúng ta sẽ thử map trực tiếp ở đây và xem Hibernate xử lý thế nào.
-            // Nếu không được thì sẽ map trong lúc tạo DTO.
+            
             ordersOnPage.forEach(order ->
                     order.setOrderItems(new HashSet<>(itemsByOrderIdMap.getOrDefault(order.getId(), Collections.emptyList())))
             );
@@ -375,26 +368,21 @@ public class OrderServiceImpl implements OrderService {
         Order updatedOrder = orderRepository.save(order); // Lưu trạng thái mới
         log.info("Order status updated successfully for order ID: {}", orderId);
 
-        // *** KHÔNG CẦN QUERY LẠI - Map từ updatedOrder ***
-        // Tuy nhiên, updatedOrder có thể không có User/Items nếu query gốc findById không fetch.
-        // Để đảm bảo DTO trả về đầy đủ sau khi update, có 2 cách:
-        // Cách 1: Fetch lại (như code cũ - tốn thêm query)
+        
         Order fetchedOrder = orderRepository.findByIdWithDetails(updatedOrder.getId()).orElse(updatedOrder);
         return mapToOrderDTO(fetchedOrder);
 
-        // Cách 2: Map từ updatedOrder, chấp nhận User/Items có thể là proxy/null nếu DTO không cần
-        // Cần đảm bảo `mapToOrderDTO` xử lý null an toàn.
-        // return mapToOrderDTO(updatedOrder);
+        
     }
 
     /**
      * Update soldCount for all products in a delivered order
      */
     private void updateSoldCountForDeliveredOrder(Order order) {
-        // Get order items - need to fetch them if not already loaded
+        // Lấy order items - cần fetch chúng nếu chưa được load
         Set<OrderItem> orderItems = order.getOrderItems();
         if (orderItems == null || orderItems.isEmpty()) {
-            // Fetch order items if not loaded
+            // Lấy order items nếu chưa được load
             orderItems = new HashSet<>(orderItemRepository.findByOrderId(order.getId()));
         }
 
@@ -411,7 +399,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    // Optional: Helper method để kiểm tra logic chuyển đổi trạng thái
+    //  Helper method để kiểm tra logic chuyển đổi trạng thái
     private boolean isValidStatusTransition(OrderStatus current, OrderStatus next) {
         if (current == next) return true; // Luôn cho phép giữ nguyên
         // Ví dụ: không cho quay lại trạng thái cũ hơn PENDING

@@ -1,7 +1,7 @@
 package com.michaelcao.bookstore_backend.dto.order;
 
-import com.michaelcao.bookstore_backend.entity.PaymentMethod; // Import Enum
-import jakarta.validation.Valid; // Import Valid để validate Address lồng vào
+import com.michaelcao.bookstore_backend.entity.PaymentMethod; 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

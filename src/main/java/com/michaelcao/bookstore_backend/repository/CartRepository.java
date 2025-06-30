@@ -1,10 +1,10 @@
 package com.michaelcao.bookstore_backend.repository;
 
 import com.michaelcao.bookstore_backend.entity.Cart;
-import com.michaelcao.bookstore_backend.entity.User; // Import User entity
+import com.michaelcao.bookstore_backend.entity.User; 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query; // Import Query nếu cần custom JPQL
-import org.springframework.data.repository.query.Param; // Import Param nếu cần custom JPQL
+import org.springframework.data.jpa.repository.Query; 
+import org.springframework.data.repository.query.Param; 
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;

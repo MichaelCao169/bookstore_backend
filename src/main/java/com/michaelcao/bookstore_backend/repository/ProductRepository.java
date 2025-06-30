@@ -1,11 +1,11 @@
 package com.michaelcao.bookstore_backend.repository;
 
 import com.michaelcao.bookstore_backend.entity.Product;
-import org.springframework.data.domain.Page; // Import Page for pagination
-import org.springframework.data.domain.Pageable; // Import Pageable for pagination info
+import org.springframework.data.domain.Page; 
+import org.springframework.data.domain.Pageable; 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query; // Import Query for custom JPQL/SQL
-import org.springframework.data.repository.query.Param; // Import Param for named parameters
+import org.springframework.data.jpa.repository.Query; 
+import org.springframework.data.repository.query.Param; 
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.UUID;
 public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpecificationExecutor<Product> {
 
     /**
-     * Find all products ordered by sold count in descending order
+     * Tìm tất cả sản phẩm được sắp xếp theo số lượng bán giảm dần
      * @return List of products sorted by number sold
      */
     List<Product> findAllByOrderBySoldCountDesc();
@@ -51,10 +51,9 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     @Query("SELECT p FROM Product p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.author) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Product> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
-    // *** OPTIMIZED QUERIES FOR PERFORMANCE ***
-    
+       
     /**
-     * Find product by ID with eagerly fetched category and categories relationships
+     * Tìm sản phẩm theo ID với các quan hệ category và categories được tải sớm
      * This prevents N+1 query issues by loading all related data in a single query
      */
     @Query("SELECT DISTINCT p FROM Product p " +
@@ -64,8 +63,8 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     Optional<Product> findByProductIdWithCategoriesFetched(@Param("productId") UUID productId);
 
     /**
-     * Find all products with eagerly fetched categories for pagination
-     * This prevents N+1 query issues when loading product lists
+     * Tìm tất cả sản phẩm với các quan hệ category và categories được tải sớm
+     * Để tránh vấn đề N+1 query khi tải danh sách sản phẩm
      */
     @Query(value = "SELECT DISTINCT p FROM Product p " +
                    "LEFT JOIN FETCH p.category " +
@@ -76,8 +75,8 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     // *** AI CHATBOT OPTIMIZED QUERIES - PREVENT LAZY INITIALIZATION ***
     
     /**
-     * Search products by title or author with eagerly fetched category for AI chatbot
-     * This prevents LazyInitializationException when accessing category information
+     * Tìm sản phẩm theo tiêu đề hoặc tác giả với các quan hệ category được tải sớm
+     * Để tránh LazyInitializationException khi truy cập thông tin category
      */
     @Query("SELECT DISTINCT p FROM Product p " +
            "LEFT JOIN FETCH p.category " +
@@ -85,7 +84,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     Page<Product> searchByTitleOrAuthorWithCategory(@Param("keyword") String keyword, Pageable pageable);
     
     /**
-     * Find products by title containing keyword with eagerly fetched category
+     * Tìm sản phẩm theo tiêu đề chứa từ khóa với các quan hệ category được tải sớm
      */
     @Query("SELECT DISTINCT p FROM Product p " +
            "LEFT JOIN FETCH p.category " +
@@ -93,7 +92,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     Page<Product> findByTitleContainingIgnoreCaseWithCategory(@Param("keyword") String keyword, Pageable pageable);
     
     /**
-     * Find products by author containing keyword with eagerly fetched category
+     * Tìm sản phẩm theo tác giả chứa từ khóa với các quan hệ category được tải sớm
      */
     @Query("SELECT DISTINCT p FROM Product p " +
            "LEFT JOIN FETCH p.category " +
@@ -101,12 +100,11 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     Page<Product> findByAuthorContainingIgnoreCaseWithCategory(@Param("keyword") String keyword, Pageable pageable);
     
     /**
-     * Find all products ordered by sold count with eagerly fetched category
+     * Tìm tất cả sản phẩm được sắp xếp theo số lượng bán giảm dần với các quan hệ category được tải sớm
      */
     @Query("SELECT DISTINCT p FROM Product p " +
            "LEFT JOIN FETCH p.category " +
            "ORDER BY p.soldCount DESC")
     List<Product> findAllByOrderBySoldCountDescWithCategory();
 
-    // Bạn có thể thêm nhiều phương thức truy vấn khác dựa trên nhu cầu
 }

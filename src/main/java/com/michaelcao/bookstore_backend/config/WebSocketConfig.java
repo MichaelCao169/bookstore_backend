@@ -21,12 +21,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        // Enable a simple memory-based message broker to carry the messages
-        // back to the client on destinations prefixed with "/topic"
+        // Cho phép gửi tin nhắn đến các client đã đăng ký
         config.enableSimpleBroker("/topic");
         
-        // Định dạng "/app" cho tin nhắn được gắn vào
-        // @MessageMapping-annotated methods
+        // Định dạng "/app" cho tin nhắn được gắn vào @MessageMapping-annotated methods
         config.setApplicationDestinationPrefixes("/app");
     }
 

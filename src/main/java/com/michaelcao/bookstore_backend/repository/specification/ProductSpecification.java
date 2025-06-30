@@ -1,14 +1,14 @@
 package com.michaelcao.bookstore_backend.repository.specification;
 
-import com.michaelcao.bookstore_backend.entity.Category; // Import Category nếu lọc theo Category object
+import com.michaelcao.bookstore_backend.entity.Category; 
 import com.michaelcao.bookstore_backend.entity.Product;
-import jakarta.persistence.criteria.*; // Import các thành phần của Criteria API
-import org.springframework.data.jpa.domain.Specification; // Import Specification
-import org.springframework.util.StringUtils; // Import StringUtils
+import jakarta.persistence.criteria.*; 
+import org.springframework.data.jpa.domain.Specification; 
+import org.springframework.util.StringUtils; 
 
 import java.math.BigDecimal;
-import java.util.ArrayList; // Import ArrayList
-import java.util.List;    // Import List
+import java.util.ArrayList; 
+import java.util.List;    
 
 public class ProductSpecification {
 

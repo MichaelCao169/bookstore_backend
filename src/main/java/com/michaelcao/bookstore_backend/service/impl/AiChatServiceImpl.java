@@ -158,7 +158,7 @@ public class AiChatServiceImpl implements AiChatService {
         List<String> keywords = extractKeywords(normalizedQuery);
         log.info("AI Chat: Extracted keywords: {}", keywords);
         
-        // Strategy 1: Exact keyword search in title or author (with eager category loading)
+        // Strategy 1: Lấy ra các sách có title hoặc author trùng với query
         List<Product> exactMatches = productRepository.searchByTitleOrAuthorWithCategory(normalizedQuery, PageRequest.of(0, 5)).getContent();
         
         if (!exactMatches.isEmpty()) {
@@ -166,7 +166,7 @@ public class AiChatServiceImpl implements AiChatService {
             return exactMatches;
         }
         
-        // Strategy 2: Try original query without normalization (in case user uses English)
+        // Strategy 2: Lấy ra các sách có title hoặc author trùng với query gốc
         if (!userQuery.equals(normalizedQuery)) {
             List<Product> originalMatches = productRepository.searchByTitleOrAuthorWithCategory(userQuery, PageRequest.of(0, 5)).getContent();
             if (!originalMatches.isEmpty()) {
@@ -175,7 +175,7 @@ public class AiChatServiceImpl implements AiChatService {
             }
         }
         
-        // Strategy 3: Try with extracted keywords
+        // Strategy 3: Lấy ra các sách có title hoặc author trùng với các keyword đã trích xuất
         for (String keyword : keywords) {
             if (keyword.length() > 1) { // Allow shorter keywords for book titles
                 List<Product> keywordMatches = productRepository.searchByTitleOrAuthorWithCategory(keyword, PageRequest.of(0, 5)).getContent();
@@ -186,10 +186,10 @@ public class AiChatServiceImpl implements AiChatService {
             }
         }
         
-        // Strategy 4: Try with individual words from the normalized query
+        // Strategy 4: Lấy ra các sách có title hoặc author trùng với các từ trong query
         String[] queryWords = normalizedQuery.split("\\s+");
         for (String word : queryWords) {
-            if (word.length() > 2) { // Skip very short words
+            if (word.length() > 2) { // Bỏ qua các từ quá ngắn
                 List<Product> wordMatches = productRepository.searchByTitleOrAuthorWithCategory(word, PageRequest.of(0, 5)).getContent();
                 if (!wordMatches.isEmpty()) {
                     log.info("AI Chat: Found {} matches for word '{}'", wordMatches.size(), word);
@@ -198,21 +198,21 @@ public class AiChatServiceImpl implements AiChatService {
             }
         }
         
-        // Strategy 5: Try title-only search (with eager category loading)
+        // Strategy 5: Lấy ra các sách có title trùng với query
         List<Product> titleMatches = productRepository.findByTitleContainingIgnoreCaseWithCategory(normalizedQuery, PageRequest.of(0, 5)).getContent();
         if (!titleMatches.isEmpty()) {
             log.info("AI Chat: Found {} title matches", titleMatches.size());
             return titleMatches;
         }
         
-        // Strategy 6: Try author-only search (with eager category loading)
+        // Strategy 6: Lấy ra các sách có author trùng với query
         List<Product> authorMatches = productRepository.findByAuthorContainingIgnoreCaseWithCategory(normalizedQuery, PageRequest.of(0, 5)).getContent();
         if (!authorMatches.isEmpty()) {
             log.info("AI Chat: Found {} author matches", authorMatches.size());
             return authorMatches;
         }
         
-        // Strategy 7: Try partial matches for each keyword
+        // Strategy 7: Lấy ra các sách có title hoặc author trùng với các keyword đã trích xuất
         for (String keyword : keywords) {
             if (keyword.length() > 1) {
                 List<Product> partialTitleMatches = productRepository.findByTitleContainingIgnoreCaseWithCategory(keyword, PageRequest.of(0, 3)).getContent();
@@ -260,7 +260,7 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     /**
-     * Extract meaningful keywords from user query by removing noise words
+     * Trích xuất các từ khóa quan trọng từ câu hỏi của người dùng bằng cách loại bỏ các từ nhiễu
      */
     private List<String> extractKeywords(String query) {
         // Common Vietnamese noise words to filter out
@@ -273,7 +273,7 @@ public class AiChatServiceImpl implements AiChatService {
             "duoc", "được", "dang", "đang", "cang", "càng", "rat", "rất", "qua", "quá"
         };
         
-        // Use HashSet to handle potential duplicates in noiseWords array
+        // Sử dụng HashSet để xử lý các từ trùng lặp trong mảng noiseWords
         Set<String> noiseSet = new HashSet<>(Arrays.asList(noiseWords));
         
         return Arrays.stream(query.split("\\s+"))
@@ -284,18 +284,18 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     /**
-     * Normalize Vietnamese text by removing diacritics and converting to lowercase
+     * Chuẩn hóa văn bản tiếng Việt bằng cách loại bỏ dấu và chuyển thành chữ thường
      */
     private String normalizeVietnameseText(String text) {
         if (text == null || text.trim().isEmpty()) return "";
         
-        // Convert to lowercase and trim
+        // Chuyển thành chữ thường và loại bỏ khoảng trắng thừa
         String normalized = text.toLowerCase().trim();
         
-        // Remove extra spaces and normalize whitespace
+        // Loại bỏ khoảng trắng thừa và chuẩn hóa khoảng trắng
         normalized = normalized.replaceAll("\\s+", " ");
         
-        // Remove common Vietnamese diacritics
+        // Loại bỏ các dấu tiếng Việt
         normalized = normalized
                 .replaceAll("[àáạảãâầấậẩẫăằắặẳẵ]", "a")
                 .replaceAll("[èéẹẻẽêềếệểễ]", "e")
@@ -312,10 +312,10 @@ public class AiChatServiceImpl implements AiChatService {
                 .replaceAll("[ỲÝỴỶỸ]", "y")
                 .replaceAll("Đ", "d");
         
-        // Remove punctuation marks that might interfere with search
+        // Loại bỏ các dấu câu mà có thể gây ra vấn đề với tìm kiếm
         normalized = normalized.replaceAll("[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?~`]", " ");
         
-        // Remove extra spaces again after punctuation removal
+        // Loại bỏ khoảng trắng thừa sau khi loại bỏ các dấu câu
         normalized = normalized.replaceAll("\\s+", " ").trim();
         
         return normalized;

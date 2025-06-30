@@ -1,20 +1,20 @@
 package com.michaelcao.bookstore_backend.repository;
 
-import com.michaelcao.bookstore_backend.entity.Cart; // Import Cart
+import com.michaelcao.bookstore_backend.entity.Cart; 
 import com.michaelcao.bookstore_backend.entity.CartItem;
-import com.michaelcao.bookstore_backend.entity.Product; // Import Product
+import com.michaelcao.bookstore_backend.entity.Product; 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying; // Import Modifying for DELETE/UPDATE queries
+import org.springframework.data.jpa.repository.Modifying; 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-import java.util.Set; // Import Set
+import java.util.Set; 
 import java.util.UUID;
 
 @Repository
-public interface CartItemRepository extends JpaRepository<CartItem, Long> { // Entity: CartItem, ID: Long
+public interface CartItemRepository extends JpaRepository<CartItem, Long> { 
 
     /**
      * Tìm một CartItem cụ thể trong một Cart dựa vào Product.

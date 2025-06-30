@@ -226,9 +226,7 @@ public class CartServiceImpl implements CartService {    private final CartRepos
             log.info("Removed cart item ID {} successfully.", cartItemId);
         } else {
             log.warn("Cart item ID {} not found in cart for user ID {}. No item removed.", cartItemId, userId);
-            // Không ném lỗi vì client có thể gửi ID sai, chỉ cần không làm gì cả
-            // Hoặc có thể ném ResourceNotFoundException nếu muốn báo lỗi rõ ràng
-            // throw new ResourceNotFoundException("Cart item not found with ID: " + cartItemId + " in your cart.");
+            
         }
 
         // Trả về giỏ hàng sau khi xóa (hoặc không đổi nếu không tìm thấy item)
@@ -242,12 +240,11 @@ public class CartServiceImpl implements CartService {    private final CartRepos
         Cart cart = getOrCreateCart(userId);
 
         if (!cart.getCartItems().isEmpty()) {
-            // Cách 1: Dùng orphanRemoval (nếu tin tưởng cascade)
+            // Cách 1: Dùng orphanRemoval 
             cart.getCartItems().clear(); // Xóa tất cả item khỏi Set
             cartRepository.save(cart); // Orphan removal sẽ xóa các CartItem khỏi DB
 
-            // Cách 2: Xóa trực tiếp bằng Repository (an toàn hơn nếu không chắc về cascade)
-            // cartItemRepository.deleteByCartId(cart.getId());
+          
             log.info("Cart cleared successfully for user ID: {}", userId);
         } else {
             log.debug("Cart for user ID {} was already empty.", userId);

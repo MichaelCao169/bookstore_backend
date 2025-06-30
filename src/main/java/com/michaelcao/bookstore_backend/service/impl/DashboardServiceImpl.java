@@ -31,18 +31,18 @@ public class DashboardServiceImpl implements DashboardService {
         log.debug("Fetching dashboard statistics");
         
         try {
-            // Count total products
+            // Đếm tổng số sản phẩm
             long totalProducts = productRepository.count();
             
-            // Count total valid orders (excluding cancelled and failed orders)
+            // Đếm tổng số đơn hàng hợp lệ (không bao gồm đơn hàng bị hủy và đơn hàng thất bại)
             long totalOrders = orderRepository.countValidOrders() != null 
                 ? orderRepository.countValidOrders() 
                 : 0L;
             
-            // Count total users
+            // Đếm tổng số người dùng
             long totalUsers = userRepository.count();
             
-            // Get total revenue from completed orders only (excluding cancelled and failed orders)
+            // Lấy tổng doanh thu từ các đơn hàng đã hoàn thành (không bao gồm đơn hàng bị hủy và đơn hàng thất bại)
             BigDecimal totalRevenue = orderRepository.getTotalRevenue() != null 
                 ? orderRepository.getTotalRevenue() 
                 : BigDecimal.ZERO;
@@ -70,9 +70,8 @@ public class DashboardServiceImpl implements DashboardService {
     public List<ProductDTO> getTopSellingProducts(int limit) {
         log.debug("Fetching top {} selling products", limit);
           try {
-            // Get top products by sales count
-            // This is a mock implementation - you'd typically query your database
-            // to get products ordered by sales count
+            // Lấy ra các sản phẩm bán chạy nhất
+            // để lấy ra các sản phẩm được sắp xếp theo số lượng bán
             return productRepository.findAllByOrderBySoldCountDesc()
                     .stream()
                     .limit(limit)
@@ -89,7 +88,7 @@ public class DashboardServiceImpl implements DashboardService {
                     .collect(Collectors.toList());
         } catch (Exception e) {
             log.error("Error getting top selling products", e);
-            // Return empty list if there's an error
+            // Trả về danh sách rỗng nếu có lỗi
             return new ArrayList<>();
         }
     }

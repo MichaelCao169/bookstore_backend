@@ -22,11 +22,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.michaelcao.bookstore_backend.repository.ReviewRepository;
 import com.michaelcao.bookstore_backend.repository.ReviewRepository.ReviewStats;
-import java.util.List; // Import List
-import java.util.Map;  // Import Map
-import java.util.function.Function; // Import Function
+import java.util.List; 
+import java.util.Map;  
+import java.util.function.Function; 
 import java.util.stream.Collectors;
-import java.util.Collections; // Import Collections
+import java.util.Collections; 
 import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.HashSet;

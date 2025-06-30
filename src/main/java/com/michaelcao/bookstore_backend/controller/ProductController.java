@@ -26,7 +26,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/products")
-@RequiredArgsConstructor // Lombok sẽ tự tạo constructor cho các field final
+@RequiredArgsConstructor 
 @Slf4j
 public class ProductController {
 
@@ -124,7 +124,7 @@ public class ProductController {
     }
 
     /**
-     * Get top selling products
+     * Trả về danh sách sản phẩm bán chạy nhất
      * @return List of top selling products
      */
     @GetMapping("/top-selling")

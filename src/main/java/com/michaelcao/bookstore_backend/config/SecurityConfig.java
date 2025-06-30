@@ -58,8 +58,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/cart/**").hasRole("CUSTOMER")
                 .requestMatchers("/api/orders/**").hasRole("CUSTOMER")
                 .requestMatchers("/api/wishlist/**").hasRole("CUSTOMER")
-                    .requestMatchers("/api/ai-chat/**").authenticated()
-                  // Admin endpoints
+                .requestMatchers("/api/ai-chat/**").authenticated()
+                // Admin endpoints
                 .requestMatchers("/api/products/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 

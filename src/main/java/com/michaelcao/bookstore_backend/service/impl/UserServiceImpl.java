@@ -12,24 +12,24 @@ import com.michaelcao.bookstore_backend.repository.UserRepository;
 import com.michaelcao.bookstore_backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder; // Import PasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder; 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Import Transactional
+import org.springframework.transaction.annotation.Transactional; 
 import com.michaelcao.bookstore_backend.dto.user.UpdateUserStatusRequest;
 import com.michaelcao.bookstore_backend.dto.user.UserManagementDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.util.StringUtils; // Import StringUtils
+import org.springframework.util.StringUtils; 
 import org.springframework.security.core.GrantedAuthority;
 import java.util.stream.Collectors;
-import java.util.Set; // Import Set
+import java.util.Set; 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder; // Inject PasswordEncoder    // --- Helper method: Map User entity sang UserProfileDTO ---
+    private final PasswordEncoder passwordEncoder;  
     private UserProfileDTO mapToUserProfileDTO(User user) {
         AddressDTO addressDTO = null;
         if (user.getDefaultAddress() != null) {
@@ -206,27 +206,7 @@ public class UserServiceImpl implements UserService {
         return mapToUserManagementDTO(updatedUser);
     }
 
-    // --- Implement updateUserRoles nếu cần ---
-    /*
-    @Override
-    @Transactional
-    public UserManagementDTO updateUserRoles(Long userId, UpdateUserRolesRequest request) {
-        log.info("Admin request: Updating roles for user ID: {} to {}", userId, request.getRoleNames());
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "ID", userId));
-
-        // Tìm các đối tượng Role từ tên role trong request
-        Set<Role> newRoles = request.getRoleNames().stream()
-                .map(roleName -> roleRepository.findByName(roleName)
-                        .orElseThrow(() -> new ResourceNotFoundException("Role", "name", roleName)))
-                .collect(Collectors.toSet());
-
-        user.setRoles(newRoles); // Ghi đè Set roles cũ
-        User updatedUser = userRepository.save(user);
-        log.info("User roles updated successfully for user ID: {}", userId);
-        return mapToUserManagementDTO(updatedUser); // mapToUserManagementDTO đã lấy roles từ user
-    }
-   */
+    
 
     @Override
     @Transactional

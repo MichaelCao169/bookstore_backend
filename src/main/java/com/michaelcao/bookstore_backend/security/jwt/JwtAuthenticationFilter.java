@@ -33,36 +33,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
         
         try {
-            // Extract JWT from the Authorization header
+            // Lấy JWT từ header Authorization
             String jwt = extractJwtFromRequest(request);
             
-            // If no token or invalid format, continue with the filter chain
+            // Nếu không có token hoặc định dạng không hợp lệ, tiếp tục filter chain
             if (jwt == null) {
                 filterChain.doFilter(request, response);
                 return;
             }
             
-            // Extract username from JWT
+            // Lấy username từ JWT
             String username = jwtUtil.extractUsername(jwt);
             
-            // Validate username and check if there's no authentication already in context
+            // Kiểm tra username và kiểm tra xem có authentication trong context chưa
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Load user details
+                // Tải thông tin user
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 
-                // Validate token
+                // Kiểm tra token
                 if (jwtUtil.isTokenValid(jwt, userDetails)) {
-                    // Create authentication token
+                    // Tạo authentication token
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
-                            null, // No credentials needed for JWT auth
+                            null, // Không cần credentials cho JWT auth
                             userDetails.getAuthorities()
                     );
                     
-                    // Set details
+                    // Đặt chi tiết
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     
-                    // Update security context
+                    // Cập nhật security context
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                     log.debug("Successfully authenticated user '{}' via JWT", username);
                 } else {
@@ -71,17 +71,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             log.error("Could not authenticate user with JWT token", e);
-            // Don't throw exception, just continue with filter chain
+            // Không ném exception, chỉ tiếp tục filter chain
         }
         
-        // Continue filter chain
+        // tiếp tục filter chain
         filterChain.doFilter(request, response);
     }
     
     /**
-     * Extract JWT from request's Authorization header
+     * Lấy JWT từ header Authorization
      * @param request The HTTP request
-     * @return JWT token or null if not found or not in correct format
+     * @return JWT token hoặc null nếu không tìm thấy hoặc không hợp lệ
      */
     private String extractJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");

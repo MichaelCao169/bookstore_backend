@@ -31,17 +31,17 @@ public class JwtUtil {
     @Value("${jwt.access-token-expiration-ms}")
     private long accessTokenExpirationMs;
 
-    // Generate access token
+    // Tạo access token
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         
-        // Add roles to claims
+        // Thêm roles vào claims
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
         claims.put("roles", roles);
         
-        // Add user info if it's our User class
+        // Thêm thông tin user nếu đó là User class         
         if (userDetails instanceof User) {
             User user = (User) userDetails;
             claims.put("userId", user.getId());
@@ -68,23 +68,23 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // Extract username from token
+    // Lấy username từ token
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    // Extract expiration date from token
+    // Lấy ngày hết hạn từ token
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    // Extract specific claim from token
+    // Lấy claim cụ thể từ token
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    // Extract all claims from token
+    // Lấy tất cả claims từ token
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
@@ -93,7 +93,7 @@ public class JwtUtil {
                 .getPayload();
     }
 
-    // Check if token is expired
+    // Kiểm tra xem token có hết hạn chưa
     private Boolean isTokenExpired(String token) {
         try {
             return extractExpiration(token).before(new Date());
@@ -102,7 +102,7 @@ public class JwtUtil {
             return true;
         }    }
 
-    // Extract user ID from token
+    // Lấy user ID từ token
     public Long extractUserId(String token) {
         return extractClaim(token, claims -> {
             Object userId = claims.get("userId");
@@ -113,7 +113,7 @@ public class JwtUtil {
         });
     }
 
-    // Validate token
+    // Kiểm tra token
     public Boolean isTokenValid(String token, UserDetails userDetails) {
         try {
             final String username = extractUsername(token);

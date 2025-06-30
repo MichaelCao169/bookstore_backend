@@ -4,27 +4,27 @@ import com.michaelcao.bookstore_backend.dto.category.CategoryDTO;
 import com.michaelcao.bookstore_backend.dto.category.CreateCategoryRequest;
 import com.michaelcao.bookstore_backend.dto.category.UpdateCategoryRequest;
 import com.michaelcao.bookstore_backend.entity.Category;
-import com.michaelcao.bookstore_backend.exception.DuplicateResourceException; // *** TẠO EXCEPTION NÀY ***
-import com.michaelcao.bookstore_backend.exception.OperationNotAllowedException; // *** TẠO EXCEPTION NÀY ***
+import com.michaelcao.bookstore_backend.exception.DuplicateResourceException; 
+import com.michaelcao.bookstore_backend.exception.OperationNotAllowedException; 
 import com.michaelcao.bookstore_backend.exception.ResourceNotFoundException;
 import com.michaelcao.bookstore_backend.repository.CategoryRepository;
-import com.michaelcao.bookstore_backend.repository.ProductRepository; // Inject để kiểm tra product trước khi xóa category
+import com.michaelcao.bookstore_backend.repository.ProductRepository; 
 import com.michaelcao.bookstore_backend.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Quan trọng cho update/delete
+import org.springframework.transaction.annotation.Transactional; 
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor // Lombok: Tạo constructor cho các field final
+@RequiredArgsConstructor 
 @Slf4j
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
-    private final ProductRepository productRepository; // Inject ProductRepository
+    private final ProductRepository productRepository; 
 
     // --- Helper method for mapping ---
     private CategoryDTO mapToCategoryDTO(Category category) {

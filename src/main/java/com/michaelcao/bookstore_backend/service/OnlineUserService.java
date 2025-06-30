@@ -7,17 +7,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
 
 /**
- * Service to track online users through WebSocket connections
+ * Dịch vụ để theo dõi người dùng đang online thông qua kết nối WebSocket
  */
 @Service
 @Slf4j
 public class OnlineUserService {
     
-    // Track online users by their user ID
+    // Theo dõi người dùng đang online bằng ID của họ
     private final ConcurrentHashMap<Long, String> onlineUsers = new ConcurrentHashMap<>();
     
     /**
-     * Mark a user as online
+     * Đánh dấu một người dùng là online
      * @param userId The user ID
      * @param sessionId The WebSocket session ID
      */
@@ -27,7 +27,7 @@ public class OnlineUserService {
     }
     
     /**
-     * Mark a user as offline
+     * Đánh dấu một người dùng là offline
      * @param userId The user ID
      */
     public void removeOnlineUser(Long userId) {
@@ -38,7 +38,7 @@ public class OnlineUserService {
     }
     
     /**
-     * Remove user by session ID (when session disconnects)
+     * Xóa người dùng bằng ID phiên (khi phiên kết nối bị ngắt)
      * @param sessionId The WebSocket session ID
      */
     public void removeUserBySession(String sessionId) {
@@ -52,7 +52,7 @@ public class OnlineUserService {
     }
     
     /**
-     * Check if a user is online
+     * Kiểm tra xem một người dùng có online không
      * @param userId The user ID
      * @return true if user is online, false otherwise
      */
@@ -61,7 +61,7 @@ public class OnlineUserService {
     }
     
     /**
-     * Get all online user IDs
+     * Lấy tất cả ID của người dùng online
      * @return Set of online user IDs
      */
     public Set<Long> getOnlineUserIds() {
@@ -69,7 +69,7 @@ public class OnlineUserService {
     }
     
     /**
-     * Get count of online users
+     * Lấy số lượng người dùng online
      * @return Number of online users
      */
     public int getOnlineUserCount() {
@@ -77,14 +77,11 @@ public class OnlineUserService {
     }
     
     /**
-     * Check if any admin is online
-     * This is a simplified check - in a real application you'd want to 
-     * track user roles or have a separate admin tracking
-     * @return true if any user is online (simplified assumption that admins might be online)
+     * Kiểm tra xem có admin nào online không
      */
     public boolean isAnyAdminOnline() {
-        // For now, we'll assume if there are any online users, an admin might be online
-        // In a real implementation, you'd track admin users specifically
+        // Hiện tại, chúng ta sẽ giả sử nếu có người dùng online, một admin có thể online
+        // Trong một implementation thực tế, bạn sẽ theo dõi người dùng admin cụ thể
         return !onlineUsers.isEmpty();
     }
 }
